@@ -1,0 +1,213 @@
+import argparse, os, sys, time, datetime, shutil
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--conifg_section", type=str,   default='Ceps',  help="Name of config section")
+    parser.add_argument("--cuda_vd",        type=str,   default='0',     help="CUDA_VISIBLE_DEVICES")
+    parser.add_argument("--seed",           type=int,   default=1234,    help="Seed value")
+    parser.add_argument("--epochs",         type=int,   default=100,     help="The number of epochs")
+    parser.add_argument("--esep",           type=int,   default=10,      help="The number of early stop epochs")
+    parser.add_argument("--bsize",          type=int,   default=16,      help="Batch size")
+    parser.add_argument("--WRSns",          type=int,   default=1000,    help="Specify number of batch to active WeightedRandomSampler")
+    parser.add_argument("--num_workers",    type=int,   default=4,       help="The number of workers for DataLoader")
+    parser.add_argument("--warm_up_num",    type=int,   default=0,       help="The number of epoches to warm up with warm_up_lr")
+    parser.add_argument("--warm_up_lr",     type=float, default=-1,      help="Learning rate for warm up")
+    parser.add_argument("--lr",             type=float, default=-1,      help="Learning rate, -1 means 0.1, -2 means 0.01")
+    parser.add_argument("--lr_lmbda",       type=float, default=-1,      help="The value of lr_lmbda for MultiplicativeLR, -1 means 0.1")
+    parser.add_argument("--lr_step_wait",   type=int,   default=50,      help="learning rate step wait epochs")
+    parser.add_argument("--opt",            type=str,   default='sgd',   help="optimizer name")
+    parser.add_argument("--cp",             type=float, default='inf',   help="To clips gradient norm")
+    parser.add_argument("--momentum",       type=float, default=0,       help="momentum value")
+    parser.add_argument("--weight_decay",   type=float, default=0,       help="The value of weight_decay for optimizer")
+    parser.add_argument("--scheduler",      type=str,   default='None',  help="scheduler name, None or MultiplicativeLR")
+    parser.add_argument("--path_data",      type=str,                    help="Root path of database")
+    parser.add_argument("--task",           type=str,                    help="Specify LA or PA task plz")
+    parser.add_argument("--dmode_train",    type=str,   default='train', help="dmode for  train Dataset")
+    parser.add_argument("--dmode___dev",    type=str,   default='eval',  help="dmode for    dev Dataset")
+    parser.add_argument("--dmode__eval",    type=str,   default='eval',  help="dmode for   eval Dataset")
+    parser.add_argument("--info",           type=str,                    help="print message")
+    args = parser.parse_args()
+    args_dict = vars(args)
+
+    if args.path_data      is None: parser.error('Check the path_data!')
+    if args.conifg_section is None: parser.error("Please specify conifg!")
+    else:
+        import   configparser
+        config = configparser.ConfigParser()
+        config.read('config.ini')
+
+    dim_f          = config.getint(args.conifg_section, 'dim_f')
+    dim_t          = config.getint(args.conifg_section, 'dim_t')
+    feature_name   = config.get(   args.conifg_section, 'feature_name')
+    file_extension = config.get(   args.conifg_section, 'file_extension')
+
+
+    # ####################################################################
+    if args.task is None: parser.error('Please specify  LA  or  PA task!')
+    else: pass
+    from pathlib import Path
+    from dataset import get_list_dict_task_online as get_list_dict
+    list_path_train, dict_cm_train, \
+    list_path___dev, dict_cm___dev, asv_data__dev, \
+    list_path__eval, dict_cm__eval, asv_data_eval= \
+    get_list_dict(Path(args.path_data), args.task, feature_name, file_extension)
+    from dataset import Dataset_online as Data_set
+    dataset_tra = Data_set(list_path_train, dict_cm_train, config, args.conifg_section, args.dmode_train)
+    dataset_dev = Data_set(list_path___dev, dict_cm___dev, config, args.conifg_section, args.dmode___dev)
+    dataset_eva = Data_set(list_path__eval, dict_cm__eval, config, args.conifg_section, args.dmode__eval)
+
+
+    # ###############################################
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_vd
+    import torch, random
+    import torch.backends.cudnn as cudnn
+    import torch.nn as nn
+    import numpy    as np
+    random.seed(      int(args.seed))
+    np.random.seed(   int(args.seed))
+    torch.manual_seed(int(args.seed))
+    cudnn.deterministic = True
+
+    counts__bona_train = 0
+    counts_spoof_train = 0
+    for name in dict_cm_train:
+        if dict_cm_train[name]: counts__bona_train += 1
+        else:                     counts_spoof_train += 1
+    weights_train = [counts_spoof_train, counts__bona_train]
+    weights_train = [1 - (x / sum(weights_train)) for x in weights_train]
+
+    counts__bona___dev = 0
+    counts_spoof___dev = 0
+    for name in dict_cm___dev:
+        if dict_cm___dev[name]: counts__bona___dev += 1
+        else:                     counts_spoof___dev += 1
+    weights___dev = [counts_spoof___dev, counts__bona___dev]
+    weights___dev = [1 - (x / sum(weights___dev)) for x in weights___dev]
+
+    nl_criterion_train = nn.CrossEntropyLoss().cuda()
+    nl_criterion___dev = nn.CrossEntropyLoss(torch.tensor(weights___dev, dtype=torch.float32)).cuda()
+    nl_criterion = nn.CrossEntropyLoss().cuda()
+
+
+    # #####################################
+    from torch.utils.data import DataLoader
+    if args.WRSns == None:
+        Dloader_tra = DataLoader(dataset_tra, batch_size=args.bsize, shuffle=True, num_workers=args.num_workers, collate_fn=None)
+        nl_criterion_train = nn.CrossEntropyLoss(torch.tensor(weights_train, dtype=torch.float32)).cuda()
+    else:
+        weights_sampler_train = list()
+        for name in dict_cm_train:
+            if dict_cm_train[name]: weights_sampler_train.append(weights_train[1])
+            else:                     weights_sampler_train.append(weights_train[0])
+        from torch.utils.data import WeightedRandomSampler
+        Sampler_tra = WeightedRandomSampler(weights_sampler_train, args.bsize * args.WRSns)
+        Dloader_tra = DataLoader(dataset_tra, batch_size=args.bsize, sampler=Sampler_tra, num_workers=args.num_workers, collate_fn=None)
+    Dloader_dev = DataLoader(dataset_dev, batch_size=args.bsize, shuffle=False, num_workers=args.num_workers, collate_fn=None)
+    Dloader_eva = DataLoader(dataset_eva, batch_size=args.bsize, shuffle=False, num_workers=args.num_workers, collate_fn=None)
+
+
+    # #################################
+    from model import T45_LCNN as Model
+    model = Model(data_shape=[dim_f, dim_t], LDO_p1=0.75, LDO_p2=0.00).cuda()
+    
+    lr =     10 ** float(args.lr)
+    clip =   10 ** float(args.cp)
+    momentum     = float(args.momentum)
+    weight_decay = float(args.weight_decay)
+    if   args.opt.lower() ==  'sgd': optimizer = torch.optim.SGD( model.parameters(), lr=lr,  momentum=momentum, weight_decay=weight_decay)
+    elif args.opt.lower() == 'adam': optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=weight_decay, amsgrad=False)
+    else: raise ValueError('Check the optimizer name')
+
+
+    # ###############################################################################
+    save_folder_name = f'exps__{datetime.datetime.now().strftime("%Y-%m%d-%H%M-%S")}'
+    save_folder_Path = Path(os.getcwd()) / save_folder_name
+    if os.path.exists(save_folder_Path) and os.path.isdir(save_folder_Path):
+        shutil.rmtree(save_folder_Path)
+    save_folder_Path.mkdir(exist_ok=True)
+
+    save_folder_modl_Path = save_folder_Path / 'modl'
+    if os.path.exists(save_folder_modl_Path) and os.path.isdir(save_folder_modl_Path):
+        shutil.rmtree(save_folder_modl_Path)
+    save_folder_modl_Path.mkdir(exist_ok=True)
+
+    save_folder_name_Path = save_folder_Path / 'name'
+    if os.path.exists(save_folder_name_Path) and os.path.isdir(save_folder_name_Path):
+        shutil.rmtree(save_folder_name_Path)
+    save_folder_name_Path.mkdir(exist_ok=True)
+
+    save_folder_scrs_Path = save_folder_Path / 'scrs'
+    if os.path.exists(save_folder_scrs_Path) and os.path.isdir(save_folder_scrs_Path):
+        shutil.rmtree(save_folder_scrs_Path)
+    save_folder_scrs_Path.mkdir(exist_ok=True)
+
+    save_folder_cmky_Path = save_folder_Path / 'cmky'
+    if os.path.exists(save_folder_cmky_Path) and os.path.isdir(save_folder_cmky_Path):
+        shutil.rmtree(save_folder_cmky_Path)
+    save_folder_cmky_Path.mkdir(exist_ok=True)
+
+
+    with open(save_folder_Path / 'flag', 'w') as f: f.write('1')
+    with open(save_folder_Path / 'hist', 'w') as f:
+        len_dataset_tra_val_eval = f'len(dataset_tra): {len(dataset_tra)}   len(dataset_dev): {len(dataset_dev)}   len(dataset_eva): {len(dataset_eva)}'
+        f.write(f'\n{len_dataset_tra_val_eval}\n\n');                print(f'\n{len_dataset_tra_val_eval}\n')
+        f.write(f'{"save_folder_name":>20s}: {save_folder_name}\n'); print(f'{"save_folder_name":>20s}: {save_folder_name}')
+        f.write(f'\n');                                              print(f'')
+        for key in args_dict:
+            configuration = f'{key:>20s}: {args_dict[key]}'
+            f.write(f'{configuration}\n')
+            print(  f'{configuration}')
+        f.write(f'\n'); print(f'')
+
+
+    # ######################################################
+    from train_eval_infer import spf_det_train, spf_det_eval
+    model.train()
+    scheduler = None
+    for group in optimizer.param_groups: group['lr'] = 10 ** float(args.warm_up_lr)
+    for warmupnum in range(args.warm_up_num):
+        _, _, _ = spf_det_train(model, Dloader_tra, nl_criterion_train, optimizer, clip)
+    for group in optimizer.param_groups: group['lr'] = lr
+
+    if   args.scheduler == 'None': lr_current = lr
+    elif args.scheduler == 'MultiplicativeLR':
+        lmbda = lambda epoch: 10 ** float(args.lr_lmbda) if ((epoch % int(args.lr_step_wait) == 0) & (epoch > 0)) else 1
+        scheduler = torch.optim.lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lmbda)
+    else: raise parser.error('Check the scheduler name!')
+
+    for ep in range(args.epochs):
+        with open(save_folder_Path / 'flag', 'r') as f: flag = int(f.read())
+        if ep == args.esep: break
+        elif flag == 0: break
+        elif flag >= 2: args.esep = flag
+        else: pass
+
+
+        model.train()
+        loss_train_avg, name_train, scrs_train, cmky_train = spf_det_train(model, Dloader_tra, nl_criterion_train, optimizer, clip)
+        np.save(save_folder_name_Path / f'name_train__ep_{ep:03d}', name_train)
+        np.save(save_folder_scrs_Path / f'scrs_train__ep_{ep:03d}', scrs_train)
+        np.save(save_folder_cmky_Path / f'cmky_train__ep_{ep:03d}', cmky_train)
+        torch.save(model.state_dict(), save_folder_modl_Path / f'modl__ep_{ep:03d}.pt')
+        if args.scheduler == 'MultiplicativeLR':
+            lr_current = scheduler.get_last_lr()[0]
+            scheduler.step()
+
+
+        model.eval()
+        loss___dev_avg, name___dev, scrs___dev, cmky___dev = spf_det_eval(model, Dloader_dev, nl_criterion___dev)
+        np.save(save_folder_name_Path / f'name___dev__ep_{ep:03d}', name___dev)
+        np.save(save_folder_scrs_Path / f'scrs___dev__ep_{ep:03d}', scrs___dev)
+        np.save(save_folder_cmky_Path / f'cmky___dev__ep_{ep:03d}', cmky___dev)
+
+        loss__eval_avg, name__eval, scrs__eval, cmky__eval = spf_det_eval(model, Dloader_eva, nl_criterion)
+        np.save(save_folder_name_Path / f'name__eval__ep_{ep:03d}', name__eval)
+        np.save(save_folder_scrs_Path / f'scrs__eval__ep_{ep:03d}', scrs__eval)
+        np.save(save_folder_cmky_Path / f'cmky__eval__ep_{ep:03d}', cmky__eval)
+
+
+        with open(save_folder_Path / 'hist', 'a') as f_hist:
+            f_hist.write(f'Epoch:{ep:>3d}, finish.\n')
+        sys.stdout.write(f'Epoch:{ep:>3d}, finish.\n')
+
