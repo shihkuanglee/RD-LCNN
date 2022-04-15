@@ -1,5 +1,3 @@
-Will be updated on 4.15.2022.
-
 # RD-LCNN
 This repository provides the replay detection systems used in ['A Study of Using Cepstrogram for Countermeasure Against Replay Attacks'](https://arxiv.org/abs/2204.04333)
 
