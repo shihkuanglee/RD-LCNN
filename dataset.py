@@ -9,6 +9,9 @@ from scipy.signal import get_window
 
 
 
+# ============================================================
+# return dict of cms with 1 (for bona fide) and 0 (for spoof).
+# ============================================================
 def dict_cm_protocols_ASVspoofing_2019(path_cm_protocols):
 
     ndarray = np.genfromtxt(path_cm_protocols, dtype=str)
@@ -35,10 +38,10 @@ def dict_cm_protocols_ASVspoofing_2019(path_cm_protocols):
     return dict_cm
 
 
-# ===============================================================
-# return list fo paths, dict of cms, asv data
-# ===============================================================
-def get_list_dict_task_online(Path_data, task, feature_name, file_extension):
+# ===========================================
+# return list of paths, dict of cms, asv data
+# =============================================================================
+def get_list_dict_task_online(Path_data, task, feature_folder, file_extension):
 
     Path_data_root = Path_data / task
     Path_cm_protocols_root =          Path_data_root / f'ASVspoof2019_{task}_cm_protocols'
@@ -55,9 +58,9 @@ def get_list_dict_task_online(Path_data, task, feature_name, file_extension):
     asv_data__dev = np.genfromtxt(Path_asv_scores_____dev, dtype=str)
     asv_data_eval = np.genfromtxt(Path_asv_scores____eval, dtype=str)
 
-    Path_data_train = Path_data_root / f'ASVspoof2019_{task}_train' / feature_name
-    Path_data___dev = Path_data_root / f'ASVspoof2019_{task}_dev'   / feature_name
-    Path_data__eval = Path_data_root / f'ASVspoof2019_{task}_eval'  / feature_name
+    Path_data_train = Path_data_root / f'ASVspoof2019_{task}_train' / feature_folder
+    Path_data___dev = Path_data_root / f'ASVspoof2019_{task}_dev'   / feature_folder
+    Path_data__eval = Path_data_root / f'ASVspoof2019_{task}_eval'  / feature_folder
     list_path_train = [os.path.join(Path_data_train, name + f'.{file_extension}') for name in list(dict_cm_train)]
     list_path___dev = [os.path.join(Path_data___dev, name + f'.{file_extension}') for name in list(dict_cm___dev)]
     list_path__eval = [os.path.join(Path_data__eval, name + f'.{file_extension}') for name in list(dict_cm__eval)]
@@ -68,6 +71,9 @@ def get_list_dict_task_online(Path_data, task, feature_name, file_extension):
 
 
 
+# ================================================================
+# create empty array then fill it with feature according to dmode.
+# ================================================================
 def shared_fill_block_tra(blck, dim_f, dim_t, dim_t_max):
     frames_num = blck.size()[2]
     blck_tar = torch.zeros(1, dim_f, dim_t_max)
@@ -208,11 +214,11 @@ def getitem_dct(self, idx):
 
 
 def init_____npy(self, config, section):
-    self.dim_f     = config.getint(    section, 'dim_f')
-    self.dim_t     = config.getint(    section, 'dim_t')
-    self.dim_t_max = config.getint(    section, 'dim_t_max') + self.dim_t
-    self.dim_t_shf = config.getint(    section, 'dim_t_shf')
-    self.power     = config.getint(    section, 'power')
+    self.dim_f     = config.getint(section, 'dim_f')
+    self.dim_t     = config.getint(section, 'dim_t')
+    self.dim_t_max = config.getint(section, 'dim_t_max') + self.dim_t
+    self.dim_t_shf = config.getint(section, 'dim_t_shf')
+    self.power     = config.getint(section, 'power')
 
 def getitem_npy(self, idx):
     filepath = self.list_path[idx]
@@ -240,12 +246,12 @@ class Dataset_online(Dataset):
             self.dict_cm = dict_cm
 
         if   file_extension == 'flac':
-            if   feature_name[:11] ==       'spectrogram': init____spec(self, config, section); self.getitem = getitem_spec
-            elif feature_name[:11] ==       'cepstrogram': init____spec(self, config, section); self.getitem = getitem_ceps
-            elif feature_name[: 3] ==               'dct': init_____dct(self, config, section); self.getitem = getitem_dct
+            if   feature_name[:11] == 'spectrogram': init____spec(self, config, section); self.getitem = getitem_spec
+            elif feature_name[:11] == 'cepstrogram': init____spec(self, config, section); self.getitem = getitem_ceps
+            elif feature_name[: 3] ==         'dct': init_____dct(self, config, section); self.getitem = getitem_dct
             else: raise ValueError(f'please Check the feature_name of section:{section} in config.ini')
         elif file_extension == 'npy':
-            if   feature_name[: 3] ==               'npy': init_____npy(self, config, section); self.getitem = getitem_npy
+            if   feature_name[: 3] ==         'npy': init_____npy(self, config, section); self.getitem = getitem_npy
             else: raise ValueError(f'please Check the feature_name of section:{section} in config.ini')
         else:
             raise ValueError(f'please Check the file_extension of section:{section} in config.ini')

@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     dim_f          = config.getint(args.conifg_section, 'dim_f')
     dim_t          = config.getint(args.conifg_section, 'dim_t')
-    feature_name   = config.get(   args.conifg_section, 'feature_name')
+    feature_folder = config.get(   args.conifg_section, 'feature_folder')
     file_extension = config.get(   args.conifg_section, 'file_extension')
 
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     list_path_train, dict_cm_train, \
     list_path___dev, dict_cm___dev, asv_data__dev, \
     list_path__eval, dict_cm__eval, asv_data_eval= \
-    get_list_dict(Path(args.path_data), args.task, feature_name, file_extension)
+    get_list_dict(Path(args.path_data), args.task, feature_folder, file_extension)
     from dataset import Dataset_online as Data_set
     dataset_tra = Data_set(list_path_train, dict_cm_train, config, args.conifg_section, args.dmode_train)
     dataset_dev = Data_set(list_path___dev, dict_cm___dev, config, args.conifg_section, args.dmode___dev)
@@ -148,6 +148,15 @@ if __name__ == '__main__':
     save_folder_cmky_Path.mkdir(exist_ok=True)
 
 
+    # ######################
+    hist_tra_losses = list()
+    hist_dev_losses = list()
+    hist_eva_losses = list()
+    hist_tra_eer_cm = list()
+    hist_dev_eer_cm = list()
+    hist_eva_eer_cm = list()
+
+    min_dev__EER = float( 'inf')
     with open(save_folder_Path / 'flag', 'w') as f: f.write('1')
     with open(save_folder_Path / 'hist', 'w') as f:
         len_dataset_tra_val_eval = f'len(dataset_tra): {len(dataset_tra)}   len(dataset_dev): {len(dataset_dev)}   len(dataset_eva): {len(dataset_eva)}'
@@ -176,6 +185,8 @@ if __name__ == '__main__':
         scheduler = torch.optim.lr_scheduler.MultiplicativeLR(optimizer, lr_lambda=lmbda)
     else: raise parser.error('Check the scheduler name!')
 
+    from tool import time_format
+    from em.em_2019 import get_eer, get_tDCF
     for ep in range(args.epochs):
         with open(save_folder_Path / 'flag', 'r') as f: flag = int(f.read())
         if ep == args.esep: break
@@ -185,29 +196,84 @@ if __name__ == '__main__':
 
 
         model.train()
+        time_start = time.time()
         loss_train_avg, name_train, scrs_train, cmky_train = spf_det_train(model, Dloader_tra, nl_criterion_train, optimizer, clip)
+        time_train = time.time() - time_start
         np.save(save_folder_name_Path / f'name_train__ep_{ep:03d}', name_train)
         np.save(save_folder_scrs_Path / f'scrs_train__ep_{ep:03d}', scrs_train)
         np.save(save_folder_cmky_Path / f'cmky_train__ep_{ep:03d}', cmky_train)
+        bona__cm_train = scrs_train[cmky_train == 'bonafide']
+        spoof_cm_train = scrs_train[cmky_train == 'spoof']
+        eer___cm_train = get_eer(bona__cm_train, spoof_cm_train)[0] * 100
+
         torch.save(model.state_dict(), save_folder_modl_Path / f'modl__ep_{ep:03d}.pt')
         if args.scheduler == 'MultiplicativeLR':
             lr_current = scheduler.get_last_lr()[0]
             scheduler.step()
 
+        if eer___cm_train == 0: str_first = f'ep:{ep:>3d} lr:{lr_current:>7.5f}  train EER:{            " 0":<6s}■'
+        else:                   str_first = f'ep:{ep:>3d} lr:{lr_current:>7.5f}  train EER:{eer___cm_train:>6.3f} '
+        time_str = time_format(time_train)
+        sys.stdout.write(f'\r{str_first}  time(train):{time_str}')
+
 
         model.eval()
+        time_start = time.time()
         loss___dev_avg, name___dev, scrs___dev, cmky___dev = spf_det_eval(model, Dloader_dev, nl_criterion___dev)
+        time___dev = time.time() - time_start
         np.save(save_folder_name_Path / f'name___dev__ep_{ep:03d}', name___dev)
         np.save(save_folder_scrs_Path / f'scrs___dev__ep_{ep:03d}', scrs___dev)
         np.save(save_folder_cmky_Path / f'cmky___dev__ep_{ep:03d}', cmky___dev)
+        bona__cm___dev = scrs___dev[cmky___dev == 'bonafide']
+        spoof_cm___dev = scrs___dev[cmky___dev == 'spoof']
+        eer___cm___dev = get_eer(bona__cm___dev, spoof_cm___dev)[0] * 100
+        min_tDCF___dev = get_tDCF(asv_data__dev, bona__cm___dev, spoof_cm___dev)
 
+        if eer___cm___dev == 0: str_secnd = f'{str_first}  dev tDCF EER:{min_tDCF___dev:>6.3f}{            " 0":<6s}■'
+        else:                   str_secnd = f'{str_first}  dev tDCF EER:{min_tDCF___dev:>6.3f}{eer___cm___dev:>6.3f} '
+        time_str = time_format(time___dev)
+        sys.stdout.write(f'\r{str_secnd}  time(dev):{time_str}')
+
+
+        time_start = time.time()
         loss__eval_avg, name__eval, scrs__eval, cmky__eval = spf_det_eval(model, Dloader_eva, nl_criterion)
+        time__eval = time.time() - time_start
         np.save(save_folder_name_Path / f'name__eval__ep_{ep:03d}', name__eval)
         np.save(save_folder_scrs_Path / f'scrs__eval__ep_{ep:03d}', scrs__eval)
         np.save(save_folder_cmky_Path / f'cmky__eval__ep_{ep:03d}', cmky__eval)
+        bona__cm__eval = scrs__eval[cmky__eval == 'bonafide']
+        spoof_cm__eval = scrs__eval[cmky__eval == 'spoof']
+        eer___cm__eval = get_eer(bona__cm__eval, spoof_cm__eval)[0] * 100
+        min_tDCF__eval = get_tDCF(asv_data_eval, bona__cm__eval, spoof_cm__eval)
 
+        if eer___cm__eval == 0: str_third = f'{str_secnd}  eval tDCF EER:{min_tDCF__eval:>6.3f}{            " 0":<6s}■'
+        else:                   str_third = f'{str_secnd}  eval tDCF EER:{min_tDCF__eval:>6.3f}{eer___cm__eval:>6.3f} '
 
-        with open(save_folder_Path / 'hist', 'a') as f_hist:
-            f_hist.write(f'Epoch:{ep:>3d}, finish.\n')
-        sys.stdout.write(f'Epoch:{ep:>3d}, finish.\n')
+        hist_tra_losses.append(loss_train_avg)
+        hist_dev_losses.append(loss___dev_avg)
+        hist_eva_losses.append(loss__eval_avg)
+        hist_tra_eer_cm.append(eer___cm_train)
+        hist_dev_eer_cm.append(eer___cm___dev)
+        hist_eva_eer_cm.append(eer___cm__eval)
+
+        np.save(save_folder_Path / 'hist_tra_losses', np.array(hist_tra_losses))
+        np.save(save_folder_Path / 'hist_dev_losses', np.array(hist_dev_losses))
+        np.save(save_folder_Path / 'hist_eva_losses', np.array(hist_eva_losses))
+        np.save(save_folder_Path / 'hist_tra_eer_cm', np.array(hist_tra_eer_cm))
+        np.save(save_folder_Path / 'hist_dev_eer_cm', np.array(hist_dev_eer_cm))
+        np.save(save_folder_Path / 'hist_eva_eer_cm', np.array(hist_eva_eer_cm))
+
+        argmin_dev__EER = np.array(hist_dev_eer_cm)[:ep+1].argmin()
+        if hist_dev_eer_cm[argmin_dev__EER] == 0:
+            nda_dev_eer_zero = np.where(hist_dev_eer_cm[:ep+1] == 0)[0]
+            argmin_dev__EER = nda_dev_eer_zero[hist_dev_losses[nda_dev_eer_zero].argmin()]
+        if hist_dev_eer_cm[argmin_dev__EER] == 0: amin_de_de = ' 0    '
+        else:                                     amin_de_de = f'{hist_dev_eer_cm[argmin_dev__EER]:>6.3f}'
+        if hist_eva_eer_cm[argmin_dev__EER] == 0: amin_de_ee = ' 0    '
+        else:                                     amin_de_ee = f'{hist_eva_eer_cm[argmin_dev__EER]:>6.3f}'
+        time_str = time_format(time_train + time___dev + time__eval)
+        str_final = f'{str_third}  time(all):{time_str}   min dev EER:{amin_de_de} at ep:{argmin_dev__EER:>3d}, eval EER:{amin_de_ee}'
+
+        sys.stdout.write(f'\r{str_final}\n')
+        with open(save_folder_Path / 'hist', 'a') as f: f.write(f'{str_final}\n')
 
