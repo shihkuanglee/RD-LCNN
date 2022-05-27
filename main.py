@@ -3,7 +3,6 @@ import argparse, os, sys, time, datetime, shutil
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--conifg_section", type=str,   default='Ceps',  help="Name of config section")
     parser.add_argument("--cuda_vd",        type=str,   default='0',     help="CUDA_VISIBLE_DEVICES")
     parser.add_argument("--seed",           type=int,   default=1234,    help="Seed value")
     parser.add_argument("--epochs",         type=int,   default=100,     help="The number of epochs")
@@ -21,21 +20,23 @@ if __name__ == '__main__':
     parser.add_argument("--momentum",       type=float, default=0,       help="momentum value")
     parser.add_argument("--weight_decay",   type=float, default=0,       help="The value of weight_decay for optimizer")
     parser.add_argument("--scheduler",      type=str,   default='None',  help="scheduler name, None or MultiplicativeLR")
-    parser.add_argument("--path_data",      type=str,                    help="Root path of database")
-    parser.add_argument("--task",           type=str,                    help="Specify LA or PA task plz")
     parser.add_argument("--dmode_train",    type=str,   default='train', help="dmode for  train Dataset")
     parser.add_argument("--dmode___dev",    type=str,   default='eval',  help="dmode for    dev Dataset")
     parser.add_argument("--dmode__eval",    type=str,   default='eval',  help="dmode for   eval Dataset")
+    parser.add_argument("--path_data",      type=str,                    help="Specify path of ASVspoof2019 directory")
+    parser.add_argument("--task",           type=str,                    help="Specify task of ASVspoof2019, LA or PA")
+    parser.add_argument("--conifg_section", type=str,                    help="Specify config section for different features")
     parser.add_argument("--info",           type=str,                    help="print message")
     args = parser.parse_args()
     args_dict = vars(args)
 
-    if args.path_data      is None: parser.error('Check the path_data!')
-    if args.conifg_section is None: parser.error("Please specify conifg!")
-    else:
-        import   configparser
-        config = configparser.ConfigParser()
-        config.read('config.ini')
+    if args.path_data      is None: parser.error('Please specify path_data!')
+    if args.task           is None: parser.error('Please specify task!')
+    if args.conifg_section is None: parser.error("Please specify conifg_section!")
+    
+    import   configparser
+    config = configparser.ConfigParser()
+    config.read('config.ini')
 
     dim_f          = config.getint(args.conifg_section, 'dim_f')
     dim_t          = config.getint(args.conifg_section, 'dim_t')
@@ -43,9 +44,7 @@ if __name__ == '__main__':
     file_extension = config.get(   args.conifg_section, 'file_extension')
 
 
-    # ####################################################################
-    if args.task is None: parser.error('Please specify  LA  or  PA task!')
-    else: pass
+    # ######################
     from pathlib import Path
     from dataset import get_list_dict_task_online as get_list_dict
     list_path_train, dict_cm_train, \
@@ -99,7 +98,7 @@ if __name__ == '__main__':
         weights_sampler_train = list()
         for name in dict_cm_train:
             if dict_cm_train[name]: weights_sampler_train.append(weights_train[1])
-            else:                     weights_sampler_train.append(weights_train[0])
+            else:                   weights_sampler_train.append(weights_train[0])
         from torch.utils.data import WeightedRandomSampler
         Sampler_tra = WeightedRandomSampler(weights_sampler_train, args.bsize * args.WRSns)
         Dloader_tra = DataLoader(dataset_tra, batch_size=args.bsize, sampler=Sampler_tra, num_workers=args.num_workers, collate_fn=None)
@@ -149,12 +148,12 @@ if __name__ == '__main__':
 
 
     # ######################
-    hist_tra_losses = list()
-    hist_dev_losses = list()
-    hist_eva_losses = list()
-    hist_tra_eer_cm = list()
-    hist_dev_eer_cm = list()
-    hist_eva_eer_cm = list()
+    hist_tra_losses = np.array(list(), dtype=np.single)
+    hist_dev_losses = np.array(list(), dtype=np.single)
+    hist_eva_losses = np.array(list(), dtype=np.single)
+    hist_tra_eer_cm = np.array(list(), dtype=np.single)
+    hist_dev_eer_cm = np.array(list(), dtype=np.single)
+    hist_eva_eer_cm = np.array(list(), dtype=np.single)
 
     min_dev__EER = float( 'inf')
     with open(save_folder_Path / 'flag', 'w') as f: f.write('1')
@@ -211,8 +210,8 @@ if __name__ == '__main__':
             lr_current = scheduler.get_last_lr()[0]
             scheduler.step()
 
-        if eer___cm_train == 0: str_first = f'ep:{ep:>3d} lr:{lr_current:>7.5f}  train EER:{            " 0":<6s}■'
-        else:                   str_first = f'ep:{ep:>3d} lr:{lr_current:>7.5f}  train EER:{eer___cm_train:>6.3f} '
+        if eer___cm_train == 0: str_first = f'ep:{ep:>3d} lr:{lr_current:>7.5f}  train EER:{            " 0":<6s}'
+        else:                   str_first = f'ep:{ep:>3d} lr:{lr_current:>7.5f}  train EER:{eer___cm_train:>6.3f}'
         time_str = time_format(time_train)
         sys.stdout.write(f'\r{str_first}  time(train):{time_str}')
 
@@ -226,11 +225,13 @@ if __name__ == '__main__':
         np.save(save_folder_cmky_Path / f'cmky___dev__ep_{ep:03d}', cmky___dev)
         bona__cm___dev = scrs___dev[cmky___dev == 'bonafide']
         spoof_cm___dev = scrs___dev[cmky___dev == 'spoof']
-        eer___cm___dev = get_eer(bona__cm___dev, spoof_cm___dev)[0] * 100
         min_tDCF___dev = get_tDCF(asv_data__dev, bona__cm___dev, spoof_cm___dev)
+        eer___cm___dev = get_eer(bona__cm___dev, spoof_cm___dev)[0] * 100
 
-        if eer___cm___dev == 0: str_secnd = f'{str_first}  dev tDCF EER:{min_tDCF___dev:>6.3f}{            " 0":<6s}■'
-        else:                   str_secnd = f'{str_first}  dev tDCF EER:{min_tDCF___dev:>6.3f}{eer___cm___dev:>6.3f} '
+        if min_tDCF___dev == 0: str_first_tdcf = f'{str_first}   dev tDCF EER:{            " 0":<6s}'
+        else:                   str_first_tdcf = f'{str_first}   dev tDCF EER:{min_tDCF___dev:>6.3f}'
+        if eer___cm___dev == 0: str_secnd      = f'{str_first_tdcf}{            " 0":<6s}'
+        else:                   str_secnd      = f'{str_first_tdcf}{eer___cm___dev:>6.3f}'
         time_str = time_format(time___dev)
         sys.stdout.write(f'\r{str_secnd}  time(dev):{time_str}')
 
@@ -243,36 +244,38 @@ if __name__ == '__main__':
         np.save(save_folder_cmky_Path / f'cmky__eval__ep_{ep:03d}', cmky__eval)
         bona__cm__eval = scrs__eval[cmky__eval == 'bonafide']
         spoof_cm__eval = scrs__eval[cmky__eval == 'spoof']
-        eer___cm__eval = get_eer(bona__cm__eval, spoof_cm__eval)[0] * 100
         min_tDCF__eval = get_tDCF(asv_data_eval, bona__cm__eval, spoof_cm__eval)
+        eer___cm__eval = get_eer(bona__cm__eval, spoof_cm__eval)[0] * 100
 
-        if eer___cm__eval == 0: str_third = f'{str_secnd}  eval tDCF EER:{min_tDCF__eval:>6.3f}{            " 0":<6s}■'
-        else:                   str_third = f'{str_secnd}  eval tDCF EER:{min_tDCF__eval:>6.3f}{eer___cm__eval:>6.3f} '
+        if min_tDCF__eval == 0: str_secnd_tdcf = f'{str_secnd}   eval tDCF EER:{            " 0":<6s}'
+        else:                   str_secnd_tdcf = f'{str_secnd}   eval tDCF EER:{min_tDCF__eval:>6.3f}'
+        if eer___cm__eval == 0: str_third      = f'{str_secnd_tdcf}{            " 0":<6s}'
+        else:                   str_third      = f'{str_secnd_tdcf}{eer___cm__eval:>6.3f} '
 
-        hist_tra_losses.append(loss_train_avg)
-        hist_dev_losses.append(loss___dev_avg)
-        hist_eva_losses.append(loss__eval_avg)
-        hist_tra_eer_cm.append(eer___cm_train)
-        hist_dev_eer_cm.append(eer___cm___dev)
-        hist_eva_eer_cm.append(eer___cm__eval)
+        hist_tra_losses = np.append(hist_tra_losses, loss_train_avg)
+        hist_dev_losses = np.append(hist_dev_losses, loss___dev_avg)
+        hist_eva_losses = np.append(hist_eva_losses, loss__eval_avg)
+        hist_tra_eer_cm = np.append(hist_tra_eer_cm, eer___cm_train)
+        hist_dev_eer_cm = np.append(hist_dev_eer_cm, eer___cm___dev)
+        hist_eva_eer_cm = np.append(hist_eva_eer_cm, eer___cm__eval)
 
-        np.save(save_folder_Path / 'hist_tra_losses', np.array(hist_tra_losses))
-        np.save(save_folder_Path / 'hist_dev_losses', np.array(hist_dev_losses))
-        np.save(save_folder_Path / 'hist_eva_losses', np.array(hist_eva_losses))
-        np.save(save_folder_Path / 'hist_tra_eer_cm', np.array(hist_tra_eer_cm))
-        np.save(save_folder_Path / 'hist_dev_eer_cm', np.array(hist_dev_eer_cm))
-        np.save(save_folder_Path / 'hist_eva_eer_cm', np.array(hist_eva_eer_cm))
+        np.save(save_folder_Path / 'hist_tra_losses', hist_tra_losses)
+        np.save(save_folder_Path / 'hist_dev_losses', hist_dev_losses)
+        np.save(save_folder_Path / 'hist_eva_losses', hist_eva_losses)
+        np.save(save_folder_Path / 'hist_tra_eer_cm', hist_tra_eer_cm)
+        np.save(save_folder_Path / 'hist_dev_eer_cm', hist_dev_eer_cm)
+        np.save(save_folder_Path / 'hist_eva_eer_cm', hist_eva_eer_cm)
 
         argmin_dev__EER = np.array(hist_dev_eer_cm)[:ep+1].argmin()
         if hist_dev_eer_cm[argmin_dev__EER] == 0:
             nda_dev_eer_zero = np.where(hist_dev_eer_cm[:ep+1] == 0)[0]
             argmin_dev__EER = nda_dev_eer_zero[hist_dev_losses[nda_dev_eer_zero].argmin()]
-        if hist_dev_eer_cm[argmin_dev__EER] == 0: amin_de_de = ' 0    '
+        if hist_dev_eer_cm[argmin_dev__EER] == 0: amin_de_de = f'{                              " 0":<6s}'
         else:                                     amin_de_de = f'{hist_dev_eer_cm[argmin_dev__EER]:>6.3f}'
-        if hist_eva_eer_cm[argmin_dev__EER] == 0: amin_de_ee = ' 0    '
+        if hist_eva_eer_cm[argmin_dev__EER] == 0: amin_de_ee = f'{                              " 0":<6s}'
         else:                                     amin_de_ee = f'{hist_eva_eer_cm[argmin_dev__EER]:>6.3f}'
         time_str = time_format(time_train + time___dev + time__eval)
-        str_final = f'{str_third}  time(all):{time_str}   min dev EER:{amin_de_de} at ep:{argmin_dev__EER:>3d}, eval EER:{amin_de_ee}'
+        str_final = f'{str_third}   time(all):{time_str}   min dev EER:{amin_de_de} at ep:{argmin_dev__EER:>3d}, eval EER:{amin_de_ee}'
 
         sys.stdout.write(f'\r{str_final}\n')
         with open(save_folder_Path / 'hist', 'a') as f: f.write(f'{str_final}\n')
