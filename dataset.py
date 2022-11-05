@@ -61,9 +61,9 @@ def get_list_dict_task_online(Path_data, task, feature_folder, file_extension):
     Path_data_train = Path_data_root / f'ASVspoof2019_{task}_train' / feature_folder
     Path_data___dev = Path_data_root / f'ASVspoof2019_{task}_dev'   / feature_folder
     Path_data__eval = Path_data_root / f'ASVspoof2019_{task}_eval'  / feature_folder
-    list_path_train = [os.path.join(Path_data_train, name + f'.{file_extension}') for name in list(dict_cm_train)]
-    list_path___dev = [os.path.join(Path_data___dev, name + f'.{file_extension}') for name in list(dict_cm___dev)]
-    list_path__eval = [os.path.join(Path_data__eval, name + f'.{file_extension}') for name in list(dict_cm__eval)]
+    list_path_train = [Path_data_train / f'{name}.{file_extension}' for name in list(dict_cm_train)]
+    list_path___dev = [Path_data___dev / f'{name}.{file_extension}' for name in list(dict_cm___dev)]
+    list_path__eval = [Path_data__eval / f'{name}.{file_extension}' for name in list(dict_cm__eval)]
 
     return list_path_train, dict_cm_train, \
            list_path___dev, dict_cm___dev, asv_data__dev, \
@@ -92,9 +92,14 @@ def shared_fill_block_val(blck, dim_f, dim_t, dim_t_max):
     blck_tar[...,:frames_num] = blck
     return blck_tar, frames_num
 
+def shared_fill_block_fix(blck, dim_f, dim_t, dim_t_max):
+    frames_num = blck.size()[2]
+    return blck, frames_num
+
 def get_shared_fill_block(dmode):
-    if   dmode.lower() ==  'train': return shared_fill_block_tra
-    elif dmode.lower() ==   'eval': return shared_fill_block_val
+    if   dmode.lower() == 'train': return shared_fill_block_tra
+    elif dmode.lower() ==  'eval': return shared_fill_block_val
+    elif dmode.lower() == 'fixed': return shared_fill_block_fix
     else: raise ValueError('Check the dmode of Dataset!')
 
 
@@ -120,7 +125,7 @@ def init____spec(self, config, section):
 def getitem_spec(self, idx):
     filepath = self.list_path[idx]
     sig, _   = torchaudio.load(filepath)
-    wavename = filepath.split(os.sep)[-1].split('.')[0]
+    wavename = filepath.stem
     cm       = torch.tensor(self.dict_cm[wavename])
     specgram = torchaudio.transforms.Spectrogram(
                     n_fft      = self.n_fft,
@@ -137,7 +142,7 @@ def getitem_spec(self, idx):
 def getitem_ceps(self, idx):
     filepath = self.list_path[idx]
     sig, _   = torchaudio.load(filepath)
-    wavename = filepath.split(os.sep)[-1].split('.')[0]
+    wavename = filepath.stem
     cm       = torch.tensor(self.dict_cm[wavename])
     specgram = torchaudio.transforms.Spectrogram(
                     n_fft      = self.n_fft,
@@ -200,7 +205,7 @@ def init_____dct(self, config, section):
 def getitem_dct(self, idx):
     filepath = self.list_path[idx]
     sig, _   = torchaudio.load(filepath)
-    wavename = filepath.split(os.sep)[-1].split('.')[0]
+    wavename = filepath.stem
     cm       = torch.tensor(self.dict_cm[wavename])
     dct_gram = torch.unsqueeze(torch.tensor(stdct(
                                                 y          = sig[0].numpy(), 
@@ -222,7 +227,7 @@ def init_____npy(self, config, section):
 
 def getitem_npy(self, idx):
     filepath = self.list_path[idx]
-    wavename = filepath.split(os.sep)[-1].split('.')[0]
+    wavename = filepath.stem
     cm       = torch.tensor(self.dict_cm[wavename])
     blck_npy = torch.unsqueeze(torch.tensor(np.load(filepath), dtype=torch.float32), 0)
     if self.power > 1: blck_npy.pow_(self.power)
@@ -239,7 +244,7 @@ class Dataset_online(Dataset):
         file_extension = config.get(section, 'file_extension')
 
         if dict_cm == 'infer':
-            filenamelist = [filepath.split(os.sep)[-1].split('.')[0] for filepath in list_path]
+            filenamelist = [filepath.stem for filepath in list_path]
             self.dict_cm = dict(zip(filenamelist, list(range(len(list_path)))))
         else:
             assert len(list_path) == len(dict_cm)

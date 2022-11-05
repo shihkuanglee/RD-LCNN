@@ -12,6 +12,7 @@ pip install -r requirements.txt
 ### Training & Testing
 ```
 python main.py --cuda_vd 0 --path_data ../../ASVspoof2019 --task PA --conifg_section Ceps
+python main.py --cuda_vd 0 --path_data ../../ASVspoof2019 --task PA --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed
 ```
 
 ### Citation Information
