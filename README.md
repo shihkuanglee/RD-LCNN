@@ -6,6 +6,21 @@ Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “[A Study of Using Cepstrogram for
 
 Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “[Detecting Replay Attacks Using Single-Channel Audio: The Temporal Autocorrelation of Speech](https://homepage.iis.sinica.edu.tw/papers/whm/25385-F.pdf),” in 2022 Asia Pacific Signal and Information Processing Association Annual Summit and Conference (APSIPA ASC) (APSIPA ASC 2022), Chiang Mai, Thailand, Nov. 2022.
 
+### Results
+
+Baseline system, the implementation of the system used in:
+Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A. (2019) [STC Antispoofing Systems for the ASVspoof2019 Challenge](https://www.isca-speech.org/archive/interspeech_2019/lavrentyeva19_interspeech.html). Proc. Interspeech 2019, 1033-1037, doi: 10.21437/Interspeech.2019-1768
+
+![](./CMs/Results-Baseline.png "Baseline system")
+
+Results of the single systems:
+
+![](./CMs/Results-Single.png "Single systems")
+
+Results of the fusion systems:
+
+![](./CMs/Results-Fusion.png "Fusion systems")
+
 ### Dependencies
 ```
 pip install -r requirements.txt
