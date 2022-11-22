@@ -29,10 +29,15 @@ Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A
 pip install -r requirements.txt
 ```
 
+## Prepare data
+```
+sh prepare_PA.sh
+```
+
 ## Training, validation and evaluation
 ```
-python main.py --cuda_vd 0 --path_data ../../ASVspoof2019 --task PA --conifg_section Ceps
-python main.py --cuda_vd 0 --path_data ../../ASVspoof2019 --task PA --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Ceps
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed
 ```
 
 ## Citation Information
