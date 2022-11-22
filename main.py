@@ -119,8 +119,8 @@ if __name__ == '__main__':
     else: raise ValueError('Check the optimizer name')
 
 
-    # ###############################################################################
-    save_folder_name = f'exps__{datetime.datetime.now().strftime("%Y-%m%d-%H%M-%S")}'
+    # #####################################################################################################
+    save_folder_name = f'exp__{datetime.datetime.now().strftime("%Y-%m%d-%H%M-%S")}__{args.conifg_section}'
     save_folder_Path = Path(os.getcwd()) / save_folder_name
     if os.path.exists(save_folder_Path) and os.path.isdir(save_folder_Path):
         shutil.rmtree(save_folder_Path)
