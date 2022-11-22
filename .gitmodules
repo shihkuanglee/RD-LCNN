@@ -1,6 +1,6 @@
 [submodule "em"]
 	path = em
-	url = git@github.com:shihkuanglee/ASVspf-em.git
+	url = https://github.com/shihkuanglee/ASVspf-em.git
 [submodule "TAC"]
 	path = TAC
-	url = git@github.com:shihkuanglee/TAC.git
+	url = https://github.com/shihkuanglee/TAC.git
