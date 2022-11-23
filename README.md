@@ -14,15 +14,20 @@ All systems reported in the papers are trained, validated and evaluated on [ASVs
 
 Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A. (2019) [STC Antispoofing Systems for the ASVspoof2019 Challenge](https://www.isca-speech.org/archive/interspeech_2019/lavrentyeva19_interspeech.html). Proc. Interspeech 2019, 1033-1037, doi: 10.21437/Interspeech.2019-1768
 
-![](./CMs/Results-Baseline.png "Baseline system")
+<img src="./CMs/Results-Baseline.png" title="Baseline system" width="500">
 
 #### Results of the single systems:
 
-![](./CMs/Results-Single.png "Single systems")
+<img src="./CMs/Results-Single.png" title="Single systems" width="500">
 
 #### Results of the fusion systems fused with equal weight (sum of scores):
 
-![](./CMs/Results-Fusion.png "Fusion systems")
+<img src="./CMs/Results-Fusion.png" title="Fusion systems" width="500">
+
+## Clone repository
+```
+git clone --recursive https://github.com/shihkuanglee/RD-LCNN.git
+```
 
 ## Dependencies
 ```
@@ -32,6 +37,12 @@ pip install -r requirements.txt
 ## Prepare data
 ```
 sh prepare_PA.sh
+```
+
+## Prepare feature
+```
+pip install -r TAC/requirements.txt
+python prepare_TAC.py --path_data ../ASVspoof2019 --task PA
 ```
 
 ## Training, validation and evaluation
