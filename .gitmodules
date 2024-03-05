@@ -4,3 +4,6 @@
 [submodule "TAC"]
 	path = TAC
 	url = https://github.com/shihkuanglee/TAC.git
+[submodule "ADFA"]
+	path = ADFA
+	url = https://github.com/shihkuanglee/ADFA.git

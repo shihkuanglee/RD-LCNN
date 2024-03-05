@@ -7,7 +7,7 @@ from librosa import util
 from scipy.fft import dct
 from scipy.signal import get_window
 
-
+from ADFA.adfa import adfa_arb, mdfa_arb, cqa_arb
 
 # ============================================================
 # return dict of cms with 1 (for bona fide) and 0 (for spoof).
@@ -158,7 +158,7 @@ def getitem_ceps(self, idx):
 
 
 
-def stdct(y, n_fft, hop_length, win_length, window):
+def framming_w_window(y, n_fft, hop_length, win_length, window):
     """Modify from stft implementation of Librosa.
 
     Copyright (c) 2013--2017, librosa development team.
@@ -196,7 +196,47 @@ def stdct(y, n_fft, hop_length, win_length, window):
     # Window the time series.
     y_frames = util.frame(y, frame_length=n_fft, hop_length=hop_length)
 
-    return dct(fft_window * y_frames, axis=0, norm='ortho')
+    return fft_window * y_frames
+
+def init____adfa(self, config, section):
+    init____spec(self, config, section)
+    self.window_fn = config.get(section, 'window_fn')
+    self.m         = adfa_arb(self.dim_f, self.n_fft).astype(np.csingle)
+
+def init____mdfa(self, config, section):
+    init____spec(self, config, section)
+    self.window_fn = config.get(section, 'window_fn')
+    self.m         = mdfa_arb(self.dim_f, self.samplerate, self.n_fft).astype(np.csingle)
+
+def init_____cqa(self, config, section):
+    init____spec(self, config, section)
+    self.window_fn = config.get(   section, 'window_fn')
+    self.base      = config.getint(section, 'base')
+    self.bins      = config.getint(section, 'bins')
+    self.m         = cqa_arb(self.dim_f, self.base, self.bins, self.n_fft).astype(np.csingle)
+
+def getitem_adfa(self, idx):
+    filepath = self.list_path[idx]
+    sig, _   = torchaudio.load(filepath)
+    wavename = filepath.stem
+    cm       = torch.tensor(self.dict_cm[wavename])
+    frames   = framming_w_window(y          = sig[0].numpy(), 
+                                 n_fft      = self.n_fft,
+                                 hop_length = self.hop_length,
+                                 win_length = self.win_length,
+                                 window     = self.window_fn)
+    adfagram = torch.unsqueeze(torch.tensor(np.abs(np.matmul(self.m, frames)), dtype=torch.float32), 0)
+    tar_gram, frames_num = self.shared_fill_block(adfagram, self.dim_f, self.dim_t, self.dim_t_max)
+    if self.power > 1: tar_gram.pow_(self.power)
+    return wavename, tar_gram, cm, frames_num
+
+
+
+def stdct(y, n_fft, hop_length, win_length, window):
+
+    framming = framming_w_window(y, n_fft, hop_length, win_length, window)
+
+    return  dct(framming, axis=0, norm='ortho')
 
 def init_____dct(self, config, section):
     init____spec(self, config, section)
@@ -254,6 +294,9 @@ class Dataset_online(Dataset):
             if   feature_name[:11] == 'spectrogram': init____spec(self, config, section); self.getitem = getitem_spec
             elif feature_name[:11] == 'cepstrogram': init____spec(self, config, section); self.getitem = getitem_ceps
             elif feature_name[: 3] ==         'dct': init_____dct(self, config, section); self.getitem = getitem_dct
+            elif feature_name[: 4] ==        'adfa': init____adfa(self, config, section); self.getitem = getitem_adfa
+            elif feature_name[: 4] ==        'mdfa': init____mdfa(self, config, section); self.getitem = getitem_adfa
+            elif feature_name[: 3] ==         'cqa': init_____cqa(self, config, section); self.getitem = getitem_adfa
             else: raise ValueError(f'please Check the feature_name of section:{section} in config.ini')
         elif file_extension == 'npy':
             if   feature_name[: 3] ==         'npy': init_____npy(self, config, section); self.getitem = getitem_npy

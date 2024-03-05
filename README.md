@@ -6,6 +6,8 @@ Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “[A Study of Using Cepstrogram for
 
 Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “[Detecting Replay Attacks Using Single-Channel Audio: The Temporal Autocorrelation of Speech](http://www.apsipa.org/proceedings/2022/APSIPA%202022/ThPM2-4/1570818355.pdf),” in 2022 Asia Pacific Signal and Information Processing Association Annual Summit and Conference (APSIPA ASC) (APSIPA ASC 2022), Chiang Mai, Thailand, Nov. 2022.
 
+Shih-Kuang Lee, “[Arbitrary Discrete Fourier Analysis and Its Application in Replayed Speech Detection](https://arxiv.org/abs/2403.01130),” arXiv preprint arXiv:2403.01130, 2024.
+
 ## Results
 
 All systems reported in the papers are trained, validated and evaluated on [ASVspoof 2019 physical access (PA)](https://www.asvspoof.org/index2019.html) database, scores can be found in the directory [CMs](./CMs).
@@ -23,6 +25,8 @@ Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A
 #### Results of the fusion systems fused with equal weight (sum of scores):
 
 <img src="./CMs/Results-Fusion.png" title="Fusion systems" width="500">
+
+<img src="./CMs/Results-ADFA.png"   title="Fusion systems" width="500">
 
 ## Clone repository
 ```
@@ -47,8 +51,17 @@ python prepare_TAC.py --path_data ../ASVspoof2019 --task PA
 
 ## Training, validation and evaluation
 ```
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section CQT
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section LFCC
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section DCT
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Spec
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Spec1724
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Ceps
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Ceps1724
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section ADFA
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section MDFA
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section CQA
 ```
 
 ## Citation Information
@@ -71,6 +84,15 @@ Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “Detecting Replay Attacks Using Si
   ADDRESS={Chiang Mai, Thailand},
   MONTH={nov},
   YEAR={2022}}
+```
+
+Shih-Kuang Lee, “Arbitrary Discrete Fourier Analysis and Its Application in Replayed Speech Detection,” arXiv preprint arXiv:2403.01130, 2024.
+```bibtex
+@article{lee2024arbitrary,
+  title={{Arbitrary Discrete Fourier Analysis and Its Application in Replayed Speech Detection}},
+  author={Shih-Kuang Lee},
+  journal={arXiv preprint arXiv:2403.01130},
+  year={2024}}
 ```
 
 ## Licensing
