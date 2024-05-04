@@ -1,4 +1,4 @@
-import argparse, os, time, shutil
+import argparse, os, platform, sys, librosa, time, shutil
 import soundfile as sf
 import     numpy as np
 from pathlib import Path
@@ -6,7 +6,12 @@ from pathlib import Path
 from TAC.calc_g import stft, tac_v8
 
 def filepath2npy_TAC(filepath, dir_data):
-    data, samplerate = sf.read(filepath)
+    if platform.system() == 'Darwin':
+        data, samplerate = librosa.load(filepath, sr=None)
+    elif platform.system() == 'Linux':
+        data, samplerate = sf.read(filepath)
+    else:
+        sys.exit("Exiting due to unsupported operating system.")
     Obs = stft(data, size=1024, shift=256)[np.newaxis,:,:]
     G_block = tac_v8(
           Obs.transpose(2, 0, 1),
