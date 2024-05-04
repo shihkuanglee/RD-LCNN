@@ -185,7 +185,7 @@ def framming_w_window(y, n_fft, hop_length, win_length, window):
     fft_window = get_window(window, win_length, fftbins=True).astype(np.float32)
 
     # Pad the window out to n_fft size
-    fft_window = util.pad_center(fft_window, n_fft)
+    fft_window = util.pad_center(fft_window, size=n_fft)
 
     # Reshape so that the window can be broadcast
     fft_window = fft_window.reshape((-1, 1))
