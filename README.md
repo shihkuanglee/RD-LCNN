@@ -43,6 +43,7 @@ pip install -r ADFA/requirements.txt
 ## Prepare data
 ```
 sh prepare_PA.sh
+sh prepare_PA_2021.sh
 ```
 
 ## Prepare feature
