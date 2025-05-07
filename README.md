@@ -1,6 +1,6 @@
 ## Introduction
 
-#### This repository provides the implemetation of the replayed speech detection system used in the papers:
+#### This repo provides the replay speech detection systems used in various studies:
 
 Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “[A Study of Using Cepstrogram for Countermeasure Against Replay Attacks](https://arxiv.org/abs/2204.04333),” arXiv preprint arXiv:2204.04333, 2022.
 
@@ -10,9 +10,9 @@ Shih-Kuang Lee, “[Arbitrary Discrete Fourier Analysis and Its Application in R
 
 ## Results
 
-All systems reported in the papers are trained, validated and evaluated on [ASVspoof 2019 physical access (PA)](https://www.asvspoof.org/index2019.html) database, scores can be found in the directory [CMs](./CMs).
+All systems reported in studies are trained, validated and evaluated on [ASVspoof 2019 / 2021 physical access (PA)](https://www.asvspoof.org/) database, scores can be found in the directory [CMs](./CMs).
 
-#### Results of the baseline system, it is the implementation of the system used in:
+#### The system is the implementation of:
 
 Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A. (2019) [STC Antispoofing Systems for the ASVspoof2019 Challenge](https://www.isca-speech.org/archive/interspeech_2019/lavrentyeva19_interspeech.html). Proc. Interspeech 2019, 1033-1037, doi: 10.21437/Interspeech.2019-1768
 
@@ -46,7 +46,7 @@ sh prepare_PA.sh
 sh prepare_PA_2021.sh
 ```
 
-## Prepare feature
+## Prepare features
 ```
 python prepare_TAC.py --path_data ../ --year 2019 --task PA --dataset  all --feature  TAC
 python prepare_TAC.py --path_data ../ --year 2019 --task PA --dataset  dev --feature MTAC
@@ -76,7 +76,7 @@ python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section QTAC --d
 python main.py --device cpu --path_data ../ASVspoof2019 --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
 ```
 
-## Citation Information
+## Citations information
 
 Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “A Study of Using Cepstrogram for Countermeasure Against Replay Attacks,” arXiv preprint arXiv:2204.04333, 2022.
 ```bibtex
