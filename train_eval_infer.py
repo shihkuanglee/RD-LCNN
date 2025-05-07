@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 
-def spf_det_train(model, Dloader, nl_criterion, optimizer, clip):
+def spf_det_train(model, device, Dloader, nl_criterion, optimizer, clip):
 
     loss_train = list()
     name_train = list()
@@ -14,30 +14,30 @@ def spf_det_train(model, Dloader, nl_criterion, optimizer, clip):
         if frames_ovr.max() > 0:
             shift_num = - (- frames_ovr // Dloader.dataset.dim_t_shf)
             for num in range(shift_num.max() + 1):
-                spec_tmp = tf_block.cuda()[...,:Dloader.dataset.dim_t]
+                spec_tmp = tf_block.to(device)[...,:Dloader.dataset.dim_t]
                 if num == 0:
                     scr_output = model(spec_tmp)
                     scr_output_tmp = scr_output[:,1].cpu().detach().numpy()
-                    loss = nl_criterion(scr_output, cm.cuda())
+                    loss = nl_criterion(scr_output, cm.to(device))
                 else:
                     for j in range(len(shift_num)):
                         if shift_num[j] == num:
                             start_points = num * Dloader.dataset.dim_t_shf
                             end___points = start_points + Dloader.dataset.dim_t
-                            spec_tmp[j] = tf_block.cuda()[j,...,start_points:end___points]
+                            spec_tmp[j] = tf_block.to(device)[j,...,start_points:end___points]
                     scr_output = model(spec_tmp)
                     for j in range(len(shift_num)):
                         if shift_num[j] == num:
                             scr_output_tmp[j] += scr_output[j,1].cpu().detach().numpy()
-                    loss += nl_criterion(scr_output, cm.cuda())
+                    loss += nl_criterion(scr_output, cm.to(device))
             loss /= (shift_num.max() + 1)
             for j in range(len(shift_num)):
                 if shift_num[j] > 0:
                     scr_output_tmp[j] /= (shift_num[j] + 1)
         else:
-            scr_output = model(tf_block.cuda()[...,:Dloader.dataset.dim_t])
+            scr_output = model(tf_block.to(device)[...,:Dloader.dataset.dim_t])
             scr_output_tmp = scr_output[:,1].cpu().detach().numpy()
-            loss = nl_criterion(scr_output, cm.cuda())
+            loss = nl_criterion(scr_output, cm.to(device))
 
         optimizer.zero_grad()
         loss.backward()
@@ -56,7 +56,7 @@ def spf_det_train(model, Dloader, nl_criterion, optimizer, clip):
     return loss_train_avg, np.array(name_train), np.array(scrs_train), np.array(cmky_train)
 
 
-def spf_det_eval(model, Dloader, nl_criterion):
+def spf_det_eval(model, device, Dloader, nl_criterion):
 
     loss__eval = list()
     name__eval = list()
@@ -69,30 +69,30 @@ def spf_det_eval(model, Dloader, nl_criterion):
             if frames_ovr.max() > 0:
                 shift_num = - (- frames_ovr // Dloader.dataset.dim_t_shf)
                 for num in range(shift_num.max() + 1):
-                    spec_tmp = tf_block.cuda()[...,:Dloader.dataset.dim_t]
+                    spec_tmp = tf_block.to(device)[...,:Dloader.dataset.dim_t]
                     if num == 0:
                         scr_output = model(spec_tmp)
                         scr_output_tmp = scr_output[:,1].cpu().detach().numpy()
-                        loss = nl_criterion(scr_output, cm.cuda())
+                        loss = nl_criterion(scr_output, cm.to(device))
                     else:
                         for j in range(len(shift_num)):
                             if shift_num[j] == num:
                                 start_points = num * Dloader.dataset.dim_t_shf
                                 end___points = start_points + Dloader.dataset.dim_t
-                                spec_tmp[j] = tf_block.cuda()[j,...,start_points:end___points]
+                                spec_tmp[j] = tf_block.to(device)[j,...,start_points:end___points]
                         scr_output = model(spec_tmp)
                         for j in range(len(shift_num)):
                             if shift_num[j] == num:
                                 scr_output_tmp[j] += scr_output[j,1].cpu().detach().numpy()
-                        loss += nl_criterion(scr_output, cm.cuda())
+                        loss += nl_criterion(scr_output, cm.to(device))
                 loss /= (shift_num.max() + 1)
                 for j in range(len(shift_num)):
                     if shift_num[j] > 0:
                         scr_output_tmp[j] /= (shift_num[j] + 1)
             else:
-                scr_output = model(tf_block.cuda()[...,:Dloader.dataset.dim_t])
+                scr_output = model(tf_block.to(device)[...,:Dloader.dataset.dim_t])
                 scr_output_tmp = scr_output[:,1].cpu().detach().numpy()
-                loss = nl_criterion(scr_output, cm.cuda())
+                loss = nl_criterion(scr_output, cm.to(device))
 
             for j in range(tf_block.size(0)):
                 loss__eval.append(loss.item())
@@ -106,7 +106,7 @@ def spf_det_eval(model, Dloader, nl_criterion):
     return loss__eval_avg, np.array(name__eval), np.array(scrs__eval), np.array(cmky__eval)
 
 
-def spf_det_infer(model, Dloader):
+def spf_det_infer(model, device, Dloader):
 
     name_infer = list()
     scrs_infer = list()
@@ -117,7 +117,7 @@ def spf_det_infer(model, Dloader):
             if frames_ovr.max() > 0:
                 shift_num = - (- frames_ovr // Dloader.dataset.dim_t_shf)
                 for num in range(shift_num.max() + 1):
-                    spec_tmp = tf_block.cuda()[...,:Dloader.dataset.dim_t]
+                    spec_tmp = tf_block.to(device)[...,:Dloader.dataset.dim_t]
                     if num == 0:
                         scr_output = model(spec_tmp)
                         scr_output_tmp = scr_output[:,1].cpu().detach().numpy()
@@ -126,7 +126,7 @@ def spf_det_infer(model, Dloader):
                             if shift_num[j] == num:
                                 start_points = num * Dloader.dataset.dim_t_shf
                                 end___points = start_points + Dloader.dataset.dim_t
-                                spec_tmp[j] = tf_block.cuda()[j,...,start_points:end___points]
+                                spec_tmp[j] = tf_block.to(device)[j,...,start_points:end___points]
                         scr_output = model(spec_tmp)
                         for j in range(len(shift_num)):
                             if shift_num[j] == num:
@@ -135,7 +135,7 @@ def spf_det_infer(model, Dloader):
                     if shift_num[j] > 0:
                         scr_output_tmp[j] /= (shift_num[j] + 1)
             else:
-                scr_output = model(tf_block.cuda()[...,:Dloader.dataset.dim_t])
+                scr_output = model(tf_block.to(device)[...,:Dloader.dataset.dim_t])
                 scr_output_tmp = scr_output[:,1].cpu().detach().numpy()
 
             for j in range(tf_block.size(0)):

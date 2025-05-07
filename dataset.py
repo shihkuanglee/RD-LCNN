@@ -9,67 +9,91 @@ from scipy.signal import get_window
 
 from ADFA.adfa import adfa_arb, mdfa_arb, cqa_arb
 
-# ============================================================
-# return dict of cms with 1 (for bona fide) and 0 (for spoof).
-# ============================================================
+# return dict of cms with 1 (for bona fide) and 0 (for spoof)
+# def dict_cm_protocols_ASVspoofing_2019(path_cm_protocols):
+
+#     ndarray = np.genfromtxt(path_cm_protocols, dtype=str)
+#     list_filename = list()
+#     list_______cm = list()
+#     for line in ndarray:
+#         list_filename.append(str(line[1]))
+#         list_______cm.append(str(line[4]))
+#     dict_cm = dict(zip(list_filename, list_______cm))
+
+#     list_set__cms = list(set(list_______cm))
+#     list_set__cms.sort()
+#     assert list_set__cms == ['bonafide', 'spoof']
+
+#     list_filename = list()
+#     list_______cm = list()
+#     for key in list(dict_cm):
+#         list_filename.append(key)
+#         if dict_cm[key] == 'bonafide':
+#             list_______cm.append(1)
+#         else :
+#             list_______cm.append(0)
+#     dict_cm = dict(zip(list_filename, list_______cm))
+
+#     return dict_cm
+
 def dict_cm_protocols_ASVspoofing_2019(path_cm_protocols):
-
     ndarray = np.genfromtxt(path_cm_protocols, dtype=str)
-    list_filename = list()
-    list_______cm = list()
-    for line in ndarray:
-        list_filename.append(str(line[1]))
-        list_______cm.append(str(line[4]))
-    dict_cm = dict(zip(list_filename, list_______cm))
 
-    list_set__cms = list(set(list_______cm))
-    list_set__cms.sort()
-    assert list_set__cms == ['bonafide', 'spoof']
+    list_filename = [str(line[1]) for line in ndarray]
+    list_______cm = [str(line[4]) for line in ndarray]
+    dict_cm = {filename: cm for filename, cm in zip(list_filename, list_______cm)}
 
-    list_filename = list()
-    list_______cm = list()
-    for key in list(dict_cm):
-        list_filename.append(key)
-        if dict_cm[key] == 'bonafide':
-            list_______cm.append(1)
-        else :
-            list_______cm.append(0)
-    dict_cm = dict(zip(list_filename, list_______cm))
+    set_cms = set(list_______cm)
+    set_cms = sorted(set_cms)
+    assert set_cms == ['bonafide', 'spoof']
+
+    dict_cm = {key: 1 if value == 'bonafide' else 0 for key, value in dict_cm.items()}
+
     return dict_cm
-
 
 # ===========================================
 # return list of paths, dict of cms, asv data
 # =============================================================================
-def get_list_dict_task_online(Path_data, task, feature_folder, file_extension):
+def get_list_dict_task_online(path_data, task, feature_folder, file_extension):
 
-    Path_data_root = Path_data / task
-    Path_cm_protocols_root =          Path_data_root / f'ASVspoof2019_{task}_cm_protocols'
-    Path_cm_protocols_train = Path_cm_protocols_root / f'ASVspoof2019.{task}.cm.train.trn.txt'
-    Path_cm_protocols___dev = Path_cm_protocols_root / f'ASVspoof2019.{task}.cm.dev.trl.txt'
-    Path_cm_protocols__eval = Path_cm_protocols_root / f'ASVspoof2019.{task}.cm.eval.trl.txt'
-    dict_cm_train = dict_cm_protocols_ASVspoofing_2019(Path_cm_protocols_train)
-    dict_cm___dev = dict_cm_protocols_ASVspoofing_2019(Path_cm_protocols___dev)
-    dict_cm__eval = dict_cm_protocols_ASVspoofing_2019(Path_cm_protocols__eval)
+    path_data__root = path_data / task
+    path_cm_protocols__root =         path_data__root / f'ASVspoof2019_{task}_cm_protocols'
+    path_cm_protocols_train = path_cm_protocols__root / f'ASVspoof2019.{task}.cm.train.trn.txt'
+    path_cm_protocols___dev = path_cm_protocols__root / f'ASVspoof2019.{task}.cm.dev.trl.txt'
+    path_cm_protocols__eval = path_cm_protocols__root / f'ASVspoof2019.{task}.cm.eval.trl.txt'
+    dict_cm_train = dict_cm_protocols_ASVspoofing_2019(path_cm_protocols_train)
+    dict_cm___dev = dict_cm_protocols_ASVspoofing_2019(path_cm_protocols___dev)
+    dict_cm__eval = dict_cm_protocols_ASVspoofing_2019(path_cm_protocols__eval)
 
-    Path_asv_scores_root =          Path_data_root / f'ASVspoof2019_{task}_asv_scores'
-    Path_asv_scores_____dev = Path_asv_scores_root / f'ASVspoof2019.{task}.asv.dev.gi.trl.scores.txt'
-    Path_asv_scores____eval = Path_asv_scores_root / f'ASVspoof2019.{task}.asv.eval.gi.trl.scores.txt'
-    asv_data__dev = np.genfromtxt(Path_asv_scores_____dev, dtype=str)
-    asv_data_eval = np.genfromtxt(Path_asv_scores____eval, dtype=str)
+    path_asv_scores__root =       path_data__root / f'ASVspoof2019_{task}_asv_scores'
+    path_asv_scores___dev = path_asv_scores__root / f'ASVspoof2019.{task}.asv.dev.gi.trl.scores.txt'
+    path_asv_scores__eval = path_asv_scores__root / f'ASVspoof2019.{task}.asv.eval.gi.trl.scores.txt'
+    asv_data__dev = np.genfromtxt(path_asv_scores___dev, dtype=str)
+    asv_data_eval = np.genfromtxt(path_asv_scores__eval, dtype=str)
 
-    Path_data_train = Path_data_root / f'ASVspoof2019_{task}_train' / feature_folder
-    Path_data___dev = Path_data_root / f'ASVspoof2019_{task}_dev'   / feature_folder
-    Path_data__eval = Path_data_root / f'ASVspoof2019_{task}_eval'  / feature_folder
-    list_path_train = [Path_data_train / f'{name}.{file_extension}' for name in list(dict_cm_train)]
-    list_path___dev = [Path_data___dev / f'{name}.{file_extension}' for name in list(dict_cm___dev)]
-    list_path__eval = [Path_data__eval / f'{name}.{file_extension}' for name in list(dict_cm__eval)]
+    path_data_train =  path_data__root / f'ASVspoof2019_{task}_train' / feature_folder
+    path_data___dev =  path_data__root / f'ASVspoof2019_{task}_dev'   / feature_folder
+    path_data__eval =  path_data__root / f'ASVspoof2019_{task}_eval'  / feature_folder
+    list_path_train = [path_data_train / f'{name}.{file_extension}' for name in list(dict_cm_train)]
+    list_path___dev = [path_data___dev / f'{name}.{file_extension}' for name in list(dict_cm___dev)]
+    list_path__eval = [path_data__eval / f'{name}.{file_extension}' for name in list(dict_cm__eval)]
 
     return list_path_train, dict_cm_train, \
            list_path___dev, dict_cm___dev, asv_data__dev, \
            list_path__eval, dict_cm__eval, asv_data_eval
 
+# return list of paths, dict of cms, asv data
+def get_list_dict_train(path_data, task, feature_folder, file_extension):
 
+    path_data__root = path_data / task
+    path_cm_protocols__root =         path_data__root / f'ASVspoof2019_{task}_cm_protocols'
+    path_cm_protocols_train = path_cm_protocols__root / f'ASVspoof2019.{task}.cm.train.trn.txt'
+    dict_cm_train = dict_cm_protocols_ASVspoofing_2019(path_cm_protocols_train)
+
+    path_data_train =  path_data__root / f'ASVspoof2019_{task}_train' / feature_folder
+    list_path_train = [path_data_train / f'{name}.{file_extension}' for name in list(dict_cm_train)]
+
+    return list_path_train, dict_cm_train
 
 # ================================================================
 # create empty array then fill it with feature according to dmode.
@@ -121,6 +145,7 @@ def init____spec(self, config, section):
     self.dim_t_max     = config.getint(section, 'dim_t_max') + self.dim_t
     self.dim_t_shf     = config.getint(section, 'dim_t_shf')
     self.power         = config.getint(section, 'power')
+    self.log           = config.getint(section, 'log')
 
 def getitem_spec(self, idx):
     filepath = self.list_path[idx]
@@ -135,6 +160,7 @@ def getitem_spec(self, idx):
                     window_fn  = self.window_fn,
                     power      = self.power)(sig)
     spec_tar, frames_num = self.shared_fill_block(specgram, self.dim_f, self.dim_t, self.dim_t_max)
+    if self.log == 1: spec_tar = torch.log(F.relu(spec_tar, inplace=True) + torch.finfo(torch.float32).eps)
     return wavename, spec_tar, cm, frames_num
 
 
@@ -228,6 +254,7 @@ def getitem_adfa(self, idx):
     adfagram = torch.unsqueeze(torch.tensor(np.abs(np.matmul(self.m, frames)), dtype=torch.float32), 0)
     tar_gram, frames_num = self.shared_fill_block(adfagram, self.dim_f, self.dim_t, self.dim_t_max)
     if self.power > 1: tar_gram.pow_(self.power)
+    if self.log  == 1: tar_gram = torch.log(F.relu(tar_gram, inplace=True) + torch.finfo(torch.float32).eps)
     return wavename, tar_gram, cm, frames_num
 
 
@@ -254,6 +281,8 @@ def getitem_dct(self, idx):
                                                 win_length = self.win_length,
                                                 window     = self.window_fn), dtype=torch.float32), 0)
     dct__tar, frames_num = self.shared_fill_block(dct_gram, self.dim_f, self.dim_t, self.dim_t_max)
+    if self.power > 1: dct__tar.pow_(self.power)
+    if self.log  == 1: dct__tar = torch.log(F.relu(dct__tar, inplace=True) + torch.finfo(torch.float32).eps)
     return wavename, dct__tar, cm, frames_num
 
 
@@ -264,14 +293,16 @@ def init_____npy(self, config, section):
     self.dim_t_max = config.getint(section, 'dim_t_max') + self.dim_t
     self.dim_t_shf = config.getint(section, 'dim_t_shf')
     self.power     = config.getint(section, 'power')
+    self.log       = config.getint(section, 'log')
 
 def getitem_npy(self, idx):
     filepath = self.list_path[idx]
     wavename = filepath.stem
     cm       = torch.tensor(self.dict_cm[wavename])
     blck_npy = torch.unsqueeze(torch.tensor(np.load(filepath), dtype=torch.float32), 0)
-    if self.power > 1: blck_npy.pow_(self.power)
     blck_tar, frames_num = self.shared_fill_block(blck_npy, self.dim_f, self.dim_t, self.dim_t_max)
+    if self.power > 1: blck_npy.pow_(self.power)
+    if self.log  == 1: blck_npy = torch.log(F.relu(blck_npy, inplace=True) + torch.finfo(torch.float32).eps)
     return wavename, blck_tar, cm, frames_num
 
 

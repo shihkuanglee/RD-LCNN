@@ -36,6 +36,8 @@ git clone --recursive https://github.com/shihkuanglee/RD-LCNN.git
 ## Dependencies
 ```
 pip install -r requirements.txt
+pip install -r TAC/requirements.txt
+pip install -r ADFA/requirements.txt
 ```
 
 ## Prepare data
@@ -45,23 +47,32 @@ sh prepare_PA.sh
 
 ## Prepare feature
 ```
-pip install -r TAC/requirements.txt
-python prepare_TAC.py --path_data ../ASVspoof2019 --task PA
+python prepare_TAC.py --path_data ../ --year 2019 --task PA --dataset  all --feature  TAC
+python prepare_TAC.py --path_data ../ --year 2019 --task PA --dataset  dev --feature MTAC
+python prepare_TAC.py --path_data ../ --year 2021 --task PA --dataset eval --feature QTAC
 ```
 
 ## Training, validation and evaluation
 ```
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section CQT
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section LFCC
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section DCT
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Spec
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Spec1724
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Ceps
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section Ceps1724
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section ADFA
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section MDFA
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --task PA --conifg_section CQA
+# with cuda
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section  CQT --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section LFCC --WRSns 1000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section  DCT --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section Spec
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section     Spec1724 --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section Log-Spec1724 --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section Ceps
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section Ceps1724 --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section ADFA --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section MDFA --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section CQFA --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section ATAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section MTAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section QTAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
+
+# with cpu
+python main.py --device cpu --path_data ../ASVspoof2019 --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
 ```
 
 ## Citation Information

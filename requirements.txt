@@ -1,5 +1,4 @@
 torch
 torchaudio
-numpy
-scipy
 librosa
+ffmpeg<7
