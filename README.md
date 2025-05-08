@@ -17,17 +17,17 @@ All systems reported in studies are trained, validated and evaluated on [ASVspoo
 
 Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A. (2019) [STC Antispoofing Systems for the ASVspoof2019 Challenge](https://www.isca-speech.org/archive/interspeech_2019/lavrentyeva19_interspeech.html). Proc. Interspeech 2019, 1033-1037, doi: 10.21437/Interspeech.2019-1768
 
-<img src="./CMs/Results-Baseline.png" title="Baseline system" width="500">
+<img src="./Figs/Results-Baseline.png" title="Baseline system" width="500">
 
 ### Results of the single systems:
 
-<img src="./CMs/Results-Single.png" title="Single systems" width="500">
+<img src="./Figs/Results-Single.png" title="Single systems" width="500">
 
 ### Results of the fusion systems fused with equal weight (sum of scores):
 
-<img src="./CMs/Results-Fusion.png" title="Fusion systems" width="500">
+<img src="./Figs/Results-Fusion.png" title="Fusion systems" width="500">
 
-<img src="./CMs/Results-ADFA.png"   title="Fusion systems" width="500">
+<img src="./Figs/Results-ADFA.png"   title="Fusion systems" width="500">
 
 ## Clone repository
 ```
