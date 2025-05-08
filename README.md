@@ -1,6 +1,7 @@
-## Introduction
+# Replay Speech Detection Systems based on LCNN
 
-#### This repo provides the replay speech detection systems used in various studies:
+## Overview
+This repository provides implementations of replay speech detection systems described in our research. These systems are designed to detect replay attacks in automatic speaker verification systems using various acoustic features and deep learning models.
 
 Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “[A Study of Using Cepstrogram for Countermeasure Against Replay Attacks](https://arxiv.org/abs/2204.04333),” arXiv preprint arXiv:2204.04333, 2022.
 
@@ -12,17 +13,17 @@ Shih-Kuang Lee, “[Arbitrary Discrete Fourier Analysis and Its Application in R
 
 All systems reported in studies are trained, validated and evaluated on [ASVspoof 2019 / 2021 physical access (PA)](https://www.asvspoof.org/) database, scores can be found in the directory [CMs](./CMs).
 
-#### The system is the implementation of:
+### The system is the implementation of:
 
 Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A. (2019) [STC Antispoofing Systems for the ASVspoof2019 Challenge](https://www.isca-speech.org/archive/interspeech_2019/lavrentyeva19_interspeech.html). Proc. Interspeech 2019, 1033-1037, doi: 10.21437/Interspeech.2019-1768
 
 <img src="./CMs/Results-Baseline.png" title="Baseline system" width="500">
 
-#### Results of the single systems:
+### Results of the single systems:
 
 <img src="./CMs/Results-Single.png" title="Single systems" width="500">
 
-#### Results of the fusion systems fused with equal weight (sum of scores):
+### Results of the fusion systems fused with equal weight (sum of scores):
 
 <img src="./CMs/Results-Fusion.png" title="Fusion systems" width="500">
 
