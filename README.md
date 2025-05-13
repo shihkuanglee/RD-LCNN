@@ -65,16 +65,21 @@ python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section     Spec
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section Log-Spec1724 --WRSns 9000
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section Ceps
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section Ceps1724 --WRSns 9000
-python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section ADFA --WRSns 9000
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section MDFA --WRSns 9000
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section CQFA --WRSns 9000
+python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section  TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section ATAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section MTAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
 python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section QTAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
 
 # with cpu
 python main.py --device cpu --path_data ../ASVspoof2019 --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
+```
+
+## Inference
+```
+./ipynbs/infer.ipynb
 ```
 
 ## Citations information
