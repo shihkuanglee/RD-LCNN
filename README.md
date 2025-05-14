@@ -77,9 +77,11 @@ python main.py --cuda_vd 0 --path_data ../ASVspoof2019 --conifg_section QTAC --d
 python main.py --device cpu --path_data ../ASVspoof2019 --conifg_section TAC --dmode_train fixed --dmode___dev fixed --dmode__eval fixed --WRSns 1000
 ```
 
-## Inference
+## Inference, fusion
 ```
 ./ipynbs/infer.ipynb
+./ipynbs/fusion-2019.ipynb
+./ipynbs/fusion-2021.ipynb
 ```
 
 ## Citations information
