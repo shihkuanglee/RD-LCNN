@@ -49,10 +49,10 @@ def calc_TAC_dataset(args, dataset):
     data_target = data_source / f'npy_{args.feature}'
     rm_mk_dir(data_target, dataset)
 
-    if   args.feature ==  'TAC': pass
-    elif args.feature == 'ATAC': m_adfa = adfa_arb( 513,        1024).T
-    elif args.feature == 'MTAC': m_mdfa = mdfa_arb( 513, 16000, 1024).T
-    elif args.feature == 'QTAC': m_cqfa = cqfa_arb( 513, 2, 1 * (513 - 1) / np.emath.logn(2, 1024 / 2), 1024).T
+    if   args.feature[:3] ==  'TAC': pass
+    elif args.feature[:4] == 'ATAC': m_adfa = adfa_arb( 513,                   1024).T
+    elif args.feature[:4] == 'MTAC': m_mdfa = mdfa_arb( 513,            16000, 1024).T
+    elif args.feature[:4] == 'QTAC': m_cqfa = cqfa_arb( 513, 2, (513 - 1) / 9, 1024).T
     else: sys.exit("Invalid feature argument. Please provide 'TAC', 'ATAC', 'MTAC', or 'QTAC'")
 
     print(f'Calculating {args.feature} on {args.year} {dataset} set..')
