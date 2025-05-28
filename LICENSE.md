@@ -1,6 +1,6 @@
 ISC License
 
-Copyright (c) 2022-, Shih-Kuang Lee.
+Copyright (c) 2022-, Lee Shih Kuang.
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above

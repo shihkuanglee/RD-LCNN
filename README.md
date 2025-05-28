@@ -7,13 +7,13 @@ Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “[A Study of Using Cepstrogram for
 
 Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “[Detecting Replay Attacks Using Single-Channel Audio: The Temporal Autocorrelation of Speech](http://www.apsipa.org/proceedings/2022/APSIPA%202022/ThPM2-4/1570818355.pdf),” in 2022 Asia Pacific Signal and Information Processing Association Annual Summit and Conference (APSIPA ASC) (APSIPA ASC 2022), Chiang Mai, Thailand, Nov. 2022.
 
-Shih-Kuang Lee, “[Arbitrary Discrete Fourier Analysis and Its Application in Replayed Speech Detection](https://arxiv.org/abs/2403.01130),” arXiv preprint arXiv:2403.01130, 2024.
+Lee Shih Kuang, “[Advanced Signal Analysis in Detecting Replay Attacks for Automatic Speaker Verification Systems](https://arxiv.org/abs/2403.01130),” arXiv preprint arXiv:2403.01130, 2025.
 
 ## Results
 
 All systems reported in studies are trained, validated and evaluated on [ASVspoof 2019 / 2021 physical access (PA)](https://www.asvspoof.org/) database, scores can be found in the directory [CMs](./CMs).
 
-### The system is the implementation of:
+### The baseline systems are the implementation of:
 
 Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A. (2019) [STC Antispoofing Systems for the ASVspoof2019 Challenge](https://www.isca-speech.org/archive/interspeech_2019/lavrentyeva19_interspeech.html). Proc. Interspeech 2019, 1033-1037, doi: 10.21437/Interspeech.2019-1768
 
@@ -27,7 +27,11 @@ Lavrentyeva, G., Novoselov, S., Tseren, A., Volkova, M., Gorlanov, A., Kozlov, A
 
 <img src="./Figs/Results-Fusion.png" title="Fusion systems" width="500">
 
-<img src="./Figs/Results-ADFA.png"   title="Fusion systems" width="500">
+### Latest Results:
+
+<img src="./Figs/Results-ADFA.png"   title="ADFA" width="500">
+
+<img src="./Figs/Results-2025.png"   title="2025" width="500">
 
 ## Clone repository
 ```
@@ -36,8 +40,8 @@ git clone --recursive https://github.com/shihkuanglee/RD-LCNN.git
 
 ## Dependencies
 ```
-pip install -r requirements.txt
-pip install -r TAC/requirements.txt
+pip install -r      requirements.txt
+pip install -r  TAC/requirements.txt
 pip install -r ADFA/requirements.txt
 ```
 
@@ -106,13 +110,16 @@ Shih-Kuang Lee, Yu Tsao, and Hsin-Min Wang, “Detecting Replay Attacks Using Si
   YEAR={2022}}
 ```
 
-Shih-Kuang Lee, “Arbitrary Discrete Fourier Analysis and Its Application in Replayed Speech Detection,” arXiv preprint arXiv:2403.01130, 2024.
+Lee Shih Kuang, “Advanced Signal Analysis in Detecting Replay Attacks for Automatic Speaker Verification Systems,” arXiv preprint arXiv:2403.01130, 2025.
 ```bibtex
-@article{lee2024arbitrary,
-  title={{Arbitrary Discrete Fourier Analysis and Its Application in Replayed Speech Detection}},
-  author={Shih-Kuang Lee},
-  journal={arXiv preprint arXiv:2403.01130},
-  year={2024}}
+@misc{lee2025adfa,
+      title={Advanced Signal Analysis in Detecting Replay Attacks for Automatic Speaker Verification Systems}, 
+      author={Lee Shih Kuang},
+      year={2025},
+      eprint={2403.01130},
+      archivePrefix={arXiv},
+      primaryClass={eess.AS},
+      url={https://arxiv.org/abs/2403.01130}}
 ```
 
 ## Licensing

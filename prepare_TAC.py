@@ -7,7 +7,7 @@ from nara_wpe.utils import stft
 from TAC.calc_g import tac_v8
 
 from dataset import framming_w_window
-from ADFA.adfa import adfa_arb, mdfa_arb, cqfa_arb
+from ADFA.adfa import aa_arb, ma_arb, cqa_arb
 
 
 def write_flag():
@@ -50,9 +50,9 @@ def calc_TAC_dataset(args, dataset):
     rm_mk_dir(data_target, dataset)
 
     if   args.feature[:3] ==  'TAC': pass
-    elif args.feature[:4] == 'ATAC': m_adfa = adfa_arb( 513,                   1024).T
-    elif args.feature[:4] == 'MTAC': m_mdfa = mdfa_arb( 513,            16000, 1024).T
-    elif args.feature[:4] == 'QTAC': m_cqfa = cqfa_arb( 513, 2, (513 - 1) / 9, 1024).T
+    elif args.feature[:4] == 'ATAC': m_adfa =  aa_arb( 513,                   1024).T
+    elif args.feature[:4] == 'MTAC': m_mdfa =  ma_arb( 513,            16000, 1024).T
+    elif args.feature[:4] == 'QTAC': m_cqfa = cqa_arb( 513, 2, (513 - 1) / 9, 1024).T
     else: sys.exit("Invalid feature argument. Please provide 'TAC', 'ATAC', 'MTAC', or 'QTAC'")
 
     print(f'Calculating {args.feature} on {args.year} {dataset} set..')

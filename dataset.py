@@ -7,7 +7,7 @@ from librosa import util
 from scipy.fft import dct
 from scipy.signal import get_window
 
-from ADFA.adfa import adfa_arb, mdfa_arb, cqa_arb
+from ADFA.adfa import aa_arb, ma_arb, cqa_arb
 
 # return dict of cms with 1 (for bona fide) and 0 (for spoof)
 # def dict_cm_protocols_ASVspoofing_2019(path_cm_protocols):
@@ -185,7 +185,8 @@ def getitem_ceps(self, idx):
 
 
 def framming_w_window(y, n_fft, hop_length, win_length, window):
-    """Modify from stft implementation of Librosa.
+    """
+    Modify from stft implementation of Librosa.
 
     Copyright (c) 2013--2017, librosa development team.
 
@@ -199,7 +200,8 @@ def framming_w_window(y, n_fft, hop_length, win_length, window):
     ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
     WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
     ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE."""
+    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+    """
 
     # By default, use the entire frame
     if win_length is None: win_length = n_fft
@@ -227,12 +229,12 @@ def framming_w_window(y, n_fft, hop_length, win_length, window):
 def init____adfa(self, config, section):
     init____spec(self, config, section)
     self.window_fn = config.get(section, 'window_fn')
-    self.m         = adfa_arb(self.dim_f, self.n_fft).astype(np.csingle)
+    self.m         = aa_arb(self.dim_f, self.n_fft).astype(np.csingle)
 
 def init____mdfa(self, config, section):
     init____spec(self, config, section)
     self.window_fn = config.get(section, 'window_fn')
-    self.m         = mdfa_arb(self.dim_f, self.samplerate, self.n_fft).astype(np.csingle)
+    self.m         = ma_arb(self.dim_f, self.samplerate, self.n_fft).astype(np.csingle)
 
 def init_____cqa(self, config, section):
     init____spec(self, config, section)
@@ -325,8 +327,8 @@ class Dataset_online(Dataset):
             if   feature_name[:11] == 'spectrogram': init____spec(self, config, section); self.getitem = getitem_spec
             elif feature_name[:11] == 'cepstrogram': init____spec(self, config, section); self.getitem = getitem_ceps
             elif feature_name[: 3] ==         'dct': init_____dct(self, config, section); self.getitem = getitem_dct
-            elif feature_name[: 4] ==        'adfa': init____adfa(self, config, section); self.getitem = getitem_adfa
-            elif feature_name[: 4] ==        'mdfa': init____mdfa(self, config, section); self.getitem = getitem_adfa
+            elif feature_name[: 2] ==          'aa': init____adfa(self, config, section); self.getitem = getitem_adfa
+            elif feature_name[: 2] ==          'ma': init____mdfa(self, config, section); self.getitem = getitem_adfa
             elif feature_name[: 3] ==         'cqa': init_____cqa(self, config, section); self.getitem = getitem_adfa
             else: raise ValueError(f'please Check the feature_name of section:{section} in config.ini')
         elif file_extension == 'npy':
