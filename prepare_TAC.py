@@ -31,8 +31,8 @@ def rm_mk_dir(data_target, dataset):
         shutil.rmtree(data_target)
     data_target.mkdir(exist_ok=True)
 
-def framming(data, size):
-    return framming_w_window(data, n_fft=size, hop_length=256, win_length=1024, window='blackman').T
+def framming(data, size, shift, wn_l, winw):
+    return framming_w_window(data, n_fft=size, hop_length=shift, win_length=wn_l, window=winw).T
 
 def calc_TAC(spectra):
     prediction_filters = tac_v8(
@@ -49,23 +49,31 @@ def calc_TAC_dataset(args, dataset):
     data_target = data_source / f'npy_{args.feature}'
     rm_mk_dir(data_target, dataset)
 
-    if   args.feature[:3] ==  'TAC': pass
-    elif args.feature[:4] == 'ATAC': m_adfa =  aa_arb( 513,                   1024).T
-    elif args.feature[:4] == 'MTAC': m_mdfa =  ma_arb( 513,            16000, 1024).T
-    elif args.feature[:4] == 'QTAC': m_cqfa = cqa_arb( 513, 2, (513 - 1) / 9, 1024).T
+    # shorten vars
+    fte   = args.feature
+    n     = args.n
+    n_fft = args.n_fft
+    h_l   = args.h_l
+    w_l   = args.w_l
+    wdw   = args.wdw
+
+    if   fte[:3] ==  'TAC': pass
+    elif fte[:4] == 'ATAC': m =  aa_arb(n,                 n_fft).T
+    elif fte[:4] == 'MTAC': m =  ma_arb(n,          16000, n_fft).T
+    elif fte[:4] == 'QTAC': m = cqa_arb(n, 2, (n - 1) / 9, n_fft).T
     else: sys.exit("Invalid feature argument. Please provide 'TAC', 'ATAC', 'MTAC', or 'QTAC'")
 
-    print(f'Calculating {args.feature} on {args.year} {dataset} set..')
+    print(f'Calculating {fte} on {args.year} {dataset} set..')
     time__total = 0
     batch__time = time.time()
     for idx in range(len(filelist)):
         data, samplerate = torchaudio.load(filelist[idx])
-        if   args.feature[:3] ==  'TAC': spectra =      stft(data[0].numpy(), size=1024, shift=256)[np.newaxis,:,:]
-        elif args.feature[:4] == 'ATAC': spectra = (framming(data[0].numpy(), size=1024)  @ m_adfa)[np.newaxis,:,:]
-        elif args.feature[:4] == 'MTAC': spectra = (framming(data[0].numpy(), size=1024)  @ m_mdfa)[np.newaxis,:,:]
-        elif args.feature[:4] == 'QTAC': spectra = (framming(data[0].numpy(), size=1024)  @ m_cqfa)[np.newaxis,:,:]
-        np.save(data_target / (filelist[idx].split(os.sep)[-1].split('.')[0] + '.npy'), calc_TAC(spectra))
+        sample = data[0].numpy()
+        if   fte[:3 ] == 'TAC': spectra =     stft(sample, size=n_fft, shift=h_l)
+        elif fte[-3:] == 'TAC': spectra = framming(sample, size=n_fft, shift=h_l, wn_l=w_l, winw=wdw) @ m
+        np.save(data_target / (filelist[idx].split(os.sep)[-1].split('.')[0] + '.npy'), calc_TAC(spectra[np.newaxis,:,:]))
 
+        # progress bar
         if (idx + 1) % 1000 == 0:
             time_pause = 0
             if int(read_flag()) == 0: # pause program
@@ -88,15 +96,20 @@ def calc_TAC_dataset(args, dataset):
             print(f'processing: {idx + 1:>6d} / {len(filelist)}, {time_str}')
 
     total_time_str = str(timedelta(seconds=int(time__total)))
-    print(f'Total time for calculating {args.feature} on {args.year} {dataset} set: {total_time_str:>8s}\n')
+    print(f'Total time for calculating {fte} on {args.year} {dataset} set: {total_time_str:>8s}\n')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path_data", type=str, required=True, help="Specify path of ASVspoof2019 dataset directory")
-    parser.add_argument("--year",      type=str, required=True, help="Specify '2019' or '2021'")
-    parser.add_argument("--task",      type=str, required=True, help="Specify task of ASVspoof2019; 'LA' or 'PA'")
-    parser.add_argument("--dataset",   type=str, required=True, help="Specify 'train', 'dev', 'eval', or 'all'")
-    parser.add_argument("--feature",   type=str, required=True, help="Specify 'TAC', 'ATAC' or 'MTAC'")
+    parser.add_argument("--path_data", type=str, required=True, help="Path of ASVspoof2019 dataset directory")
+    parser.add_argument("--year",      type=str, required=True, help="'2019' or '2021'")
+    parser.add_argument("--task",      type=str, required=True, help="Task of ASVspoof2019; 'LA' or 'PA'")
+    parser.add_argument("--dataset",   type=str, required=True, help="'train', 'dev', 'eval', or 'all'")
+    parser.add_argument("--feature",   type=str, required=True, help="'TAC', 'ATAC', 'MTAC' or 'QTAC'")
+    parser.add_argument("--n",         type=int,  default=513,  help="Number of frequency components")
+    parser.add_argument("--n_fft",     type=int,  default=1024, help="n_fft")
+    parser.add_argument("--h_l",       type=int,  default=256,  help="hop_length")
+    parser.add_argument("--w_l",       type=int,  default=1024, help="win_length")
+    parser.add_argument("--wdw",       type=str,  default='blackman', help="blackman")
     args = parser.parse_args()
 
     write_flag() # for pausing program

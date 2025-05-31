@@ -54,7 +54,6 @@ sh prepare_PA_2021.sh
 ## Prepare features
 ```
 python prepare_TAC.py --path_data ../ --year 2019 --task PA --dataset  all --feature  TAC
-python prepare_TAC.py --path_data ../ --year 2019 --task PA --dataset  dev --feature MTAC
 python prepare_TAC.py --path_data ../ --year 2021 --task PA --dataset eval --feature QTAC
 ```
 

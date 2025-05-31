@@ -9,32 +9,6 @@ from scipy.signal import get_window
 
 from ADFA.adfa import aa_arb, ma_arb, cqa_arb
 
-# return dict of cms with 1 (for bona fide) and 0 (for spoof)
-# def dict_cm_protocols_ASVspoofing_2019(path_cm_protocols):
-
-#     ndarray = np.genfromtxt(path_cm_protocols, dtype=str)
-#     list_filename = list()
-#     list_______cm = list()
-#     for line in ndarray:
-#         list_filename.append(str(line[1]))
-#         list_______cm.append(str(line[4]))
-#     dict_cm = dict(zip(list_filename, list_______cm))
-
-#     list_set__cms = list(set(list_______cm))
-#     list_set__cms.sort()
-#     assert list_set__cms == ['bonafide', 'spoof']
-
-#     list_filename = list()
-#     list_______cm = list()
-#     for key in list(dict_cm):
-#         list_filename.append(key)
-#         if dict_cm[key] == 'bonafide':
-#             list_______cm.append(1)
-#         else :
-#             list_______cm.append(0)
-#     dict_cm = dict(zip(list_filename, list_______cm))
-
-#     return dict_cm
 
 def dict_cm_protocols_ASVspoofing_2019(path_cm_protocols):
     ndarray = np.genfromtxt(path_cm_protocols, dtype=str)
@@ -51,9 +25,7 @@ def dict_cm_protocols_ASVspoofing_2019(path_cm_protocols):
 
     return dict_cm
 
-# ===========================================
 # return list of paths, dict of cms, asv data
-# =============================================================================
 def get_list_dict_task_online(path_data, task, feature_folder, file_extension):
 
     path_data__root = path_data / task
@@ -95,9 +67,7 @@ def get_list_dict_train(path_data, task, feature_folder, file_extension):
 
     return list_path_train, dict_cm_train
 
-# ================================================================
 # create empty array then fill it with feature according to dmode.
-# ================================================================
 def shared_fill_block_tra(blck, dim_f, dim_t, dim_t_max):
     frames_num = blck.size()[2]
     blck_tar = torch.zeros(1, dim_f, dim_t_max)
@@ -126,14 +96,12 @@ def get_shared_fill_block(dmode):
     elif dmode.lower() == 'fixed': return shared_fill_block_fix
     else: raise ValueError('Check the dmode of Dataset!')
 
-
-
 def get_window_fn(window_fn_name):
     if   window_fn_name == 'blackman': return torch.blackman_window
     elif window_fn_name ==  'hamming': return torch.hamming_window
     else: raise ValueError('Check the window_fn_name!')
 
-def init____spec(self, config, section):
+def init_spec(self, config, section):
     self.samplerate    = config.getint(section, 'samplerate')
     self.n_fft         = config.getint(section, 'n_fft')
     self.win_length    = config.getint(section, 'win_length')
@@ -163,8 +131,6 @@ def getitem_spec(self, idx):
     if self.log == 1: spec_tar = torch.log(F.relu(spec_tar, inplace=True) + torch.finfo(torch.float32).eps)
     return wavename, spec_tar, cm, frames_num
 
-
-
 def getitem_ceps(self, idx):
     filepath = self.list_path[idx]
     sig, _   = torchaudio.load(filepath)
@@ -181,8 +147,6 @@ def getitem_ceps(self, idx):
     cepsgram = torch.tensor(dct(log_spec.numpy(), axis=-2, norm='ortho'), dtype=torch.float32)
     ceps_tar, frames_num = self.shared_fill_block(cepsgram, self.dim_f, self.dim_t, self.dim_t_max)
     return wavename, ceps_tar, cm, frames_num
-
-
 
 def framming_w_window(y, n_fft, hop_length, win_length, window):
     """
@@ -226,18 +190,18 @@ def framming_w_window(y, n_fft, hop_length, win_length, window):
 
     return fft_window * y_frames
 
-def init____adfa(self, config, section):
-    init____spec(self, config, section)
+def init___aa(self, config, section):
+    init_spec(self, config, section)
     self.window_fn = config.get(section, 'window_fn')
     self.m         = aa_arb(self.dim_f, self.n_fft).astype(np.csingle)
 
-def init____mdfa(self, config, section):
-    init____spec(self, config, section)
+def init___ma(self, config, section):
+    init_spec(self, config, section)
     self.window_fn = config.get(section, 'window_fn')
     self.m         = ma_arb(self.dim_f, self.samplerate, self.n_fft).astype(np.csingle)
 
-def init_____cqa(self, config, section):
-    init____spec(self, config, section)
+def init__cqa(self, config, section):
+    init_spec(self, config, section)
     self.window_fn = config.get(   section, 'window_fn')
     self.base      = config.getint(section, 'base')
     self.bins      = config.getint(section, 'bins')
@@ -259,16 +223,14 @@ def getitem_adfa(self, idx):
     if self.log  == 1: tar_gram = torch.log(F.relu(tar_gram, inplace=True) + torch.finfo(torch.float32).eps)
     return wavename, tar_gram, cm, frames_num
 
-
-
 def stdct(y, n_fft, hop_length, win_length, window):
 
     framming = framming_w_window(y, n_fft, hop_length, win_length, window)
 
     return  dct(framming, axis=0, norm='ortho')
 
-def init_____dct(self, config, section):
-    init____spec(self, config, section)
+def init__dct(self, config, section):
+    init_spec(self, config, section)
     self.window_fn = config.get(section, 'window_fn')
 
 def getitem_dct(self, idx):
@@ -287,9 +249,7 @@ def getitem_dct(self, idx):
     if self.log  == 1: dct__tar = torch.log(F.relu(dct__tar, inplace=True) + torch.finfo(torch.float32).eps)
     return wavename, dct__tar, cm, frames_num
 
-
-
-def init_____npy(self, config, section):
+def init__npy(self, config, section):
     self.dim_f     = config.getint(section, 'dim_f')
     self.dim_t     = config.getint(section, 'dim_t')
     self.dim_t_max = config.getint(section, 'dim_t_max') + self.dim_t
@@ -307,8 +267,6 @@ def getitem_npy(self, idx):
     if self.log  == 1: blck_npy = torch.log(F.relu(blck_npy, inplace=True) + torch.finfo(torch.float32).eps)
     return wavename, blck_tar, cm, frames_num
 
-
-
 class Dataset_online(Dataset):
     def __init__(self, list_path, dict_cm, config, section, dmode):
 
@@ -324,15 +282,15 @@ class Dataset_online(Dataset):
             self.dict_cm = dict_cm
 
         if   file_extension == 'flac':
-            if   feature_name[:11] == 'spectrogram': init____spec(self, config, section); self.getitem = getitem_spec
-            elif feature_name[:11] == 'cepstrogram': init____spec(self, config, section); self.getitem = getitem_ceps
-            elif feature_name[: 3] ==         'dct': init_____dct(self, config, section); self.getitem = getitem_dct
-            elif feature_name[: 2] ==          'aa': init____adfa(self, config, section); self.getitem = getitem_adfa
-            elif feature_name[: 2] ==          'ma': init____mdfa(self, config, section); self.getitem = getitem_adfa
-            elif feature_name[: 3] ==         'cqa': init_____cqa(self, config, section); self.getitem = getitem_adfa
+            if   feature_name[:7] == 'Spectra': init_spec(self, config, section); self.getitem = getitem_spec
+            elif feature_name[:7] == 'Cepstra': init_spec(self, config, section); self.getitem = getitem_ceps
+            elif feature_name[:7] == 'DCTgram': init__dct(self, config, section); self.getitem = getitem_dct
+            elif feature_name[:2] ==      'AA': init___aa(self, config, section); self.getitem = getitem_adfa
+            elif feature_name[:2] ==      'MA': init___ma(self, config, section); self.getitem = getitem_adfa
+            elif feature_name[:3] ==     'CQA': init__cqa(self, config, section); self.getitem = getitem_adfa
             else: raise ValueError(f'please Check the feature_name of section:{section} in config.ini')
         elif file_extension == 'npy':
-            if   feature_name[: 3] ==         'npy': init_____npy(self, config, section); self.getitem = getitem_npy
+            if   feature_name[: 3] ==         'npy': init__npy(self, config, section); self.getitem = getitem_npy
             else: raise ValueError(f'please Check the feature_name of section:{section} in config.ini')
         else:
             raise ValueError(f'please Check the file_extension of section:{section} in config.ini')
